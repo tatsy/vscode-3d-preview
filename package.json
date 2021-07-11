@@ -1,0 +1,127 @@
+{
+  "name": "vscode-meshviewer",
+  "displayName": "vscode-3dviewer-light",
+  "description": "VS Code 3D Viewer Light",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.55.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "mesh",
+    "point cloud"
+  ],
+  "activationEvents": [
+    "onCustomEditor:3dviewer-light.viewer"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "capabilities": {
+      "untrustedWorkspaces": {
+        "supported": true
+      }
+    },
+    "customEditors": [
+      {
+        "viewType": "3dviewer-light.viewer",
+        "displayName": "3D Viewer Light",
+        "selector": [
+          {
+            "filenamePattern": "*.obj"
+          },
+          {
+            "filenamePattern": "*.stl"
+          },
+          {
+            "filenamePattern": "*.off"
+          },
+          {
+            "filenamePattern": "*.ply"
+          },
+          {
+            "filenamePattern": "*.pcd"
+          },
+          {
+            "filenamePattern": "*.xyz"
+          }
+        ]
+      }
+    ],
+    "configuration": {
+      "title": "VSCode 3D Viewer Light",
+      "properties": {
+        "3dviewer-light.pointMaxSize": {
+          "type": "number",
+          "default": 0.5,
+          "description": "Maximum point size."
+        },
+        "3dviewer-light.pointSize": {
+          "type": "number",
+          "default": 0.01,
+          "description": "Default point size."
+        },
+        "3dviewer-light.showPoints": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show point cloud."
+        },
+        "3dviewer-light.showWireframe": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show wireframe."
+        },
+        "3dviewer-light.showMesh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show mesh triangles."
+        },
+        "3dviewer-light.showGridHelper": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show grid helper."
+        },
+        "3dviewer-light.backgroundColor": {
+          "type": "string",
+          "default": "#121212",
+          "description": "Default background color."
+        },
+        "3dviewer-light.pointColor": {
+          "type": "string",
+          "default": "#cc0000",
+          "description": "Default point color."
+        },
+        "3dviewer-light.fogDensity": {
+          "type": "number",
+          "default": 0.0,
+          "description": "Fog density."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/dat-gui": "^0.6.3",
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "14.x",
+    "@types/three": "^0.130.0",
+    "@types/vscode": "^1.58.0",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "eslint": "^7.27.0",
+    "glob": "^7.1.7",
+    "mocha": "^8.4.0",
+    "tslint": "^6.1.3",
+    "typescript": "^4.3.2",
+    "vscode-test": "^1.5.2"
+  }
+}
