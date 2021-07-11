@@ -30,6 +30,12 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 * When I drag&drop a mesh file, a blank display is shown.
     * To show a 3D data using this extension, you should first open a workspace including the 3D data that you want to open.
 
+## Reference
+
+* [vscode-3dviewer](https://github.com/stef-levesque/vscode-3dviewer)
+* [vscode-pc-viewer](https://github.com/Obarads/vscode-pc-viewer)
+* [three.js](https://threejs.org/)
+
 ## Lincense
 
 MIT License 2021 (c) Tatsuya Yatagawa
