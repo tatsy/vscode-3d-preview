@@ -23,7 +23,7 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
   }
 
   // view type name
-  private static readonly viewType = '3dviewer-light.viewer';
+  private static readonly viewType = '3dpreview.viewer';
 
   // tracks all known webviews
   private readonly webviews = new WebviewCollection();
@@ -68,7 +68,7 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
 
     webviewPanel.webview.onDidReceiveMessage(e => this.onMessage(document, e));
 
-    if (document.uri.scheme == 'file' && vscode.workspace.getConfiguration('3dviewer-light').get('hotReload', true)) {
+    if (document.uri.scheme == 'file' && vscode.workspace.getConfiguration('3dpreview').get('hotReload', true)) {
       const watcher = vscode.workspace.createFileSystemWatcher(document.uri.fsPath, true, false, true);
 
       watcher.onDidChange(() => webviewPanel.webview.postMessage('modelRefresh'));
@@ -89,7 +89,7 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
   }
 
   private getSettings(uri: vscode.Uri): string {
-    const config = vscode.workspace.getConfiguration('3dviewer-light');
+    const config = vscode.workspace.getConfiguration('3dpreview');
     const initialData = {
       fileToLoad: uri.toString(),
       pointMaxSize: config.get('pointMaxSize', 0.002),

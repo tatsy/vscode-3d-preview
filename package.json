@@ -1,8 +1,8 @@
 {
-  "name": "vscode-meshviewer",
+  "name": "vscode-3d-preview",
   "publisher": "tatsy",
-  "displayName": "vscode-3dviewer-light",
-  "description": "VS Code 3D Viewer Light",
+  "displayName": "vscode-3d-preview",
+  "description": "VS Code 3D Preview",
   "version": "0.1.0",
   "icon": "logo.png",
   "homepage": "https://github.com/tatsy/vscode-3d-preview",
@@ -21,7 +21,7 @@
     "point cloud"
   ],
   "activationEvents": [
-    "onCustomEditor:3dviewer-light.viewer"
+    "onCustomEditor:3dpreview.viewer"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -32,7 +32,7 @@
     },
     "customEditors": [
       {
-        "viewType": "3dviewer-light.viewer",
+        "viewType": "3dpreview.viewer",
         "displayName": "3D Viewer Light",
         "selector": [
           {
@@ -57,49 +57,49 @@
       }
     ],
     "configuration": {
-      "title": "VSCode 3D Viewer Light",
+      "title": "VSCode 3D Preview",
       "properties": {
-        "3dviewer-light.pointMaxSize": {
+        "3dpreview.pointMaxSize": {
           "type": "number",
           "default": 0.5,
           "description": "Maximum point size."
         },
-        "3dviewer-light.pointSize": {
+        "3dpreview.pointSize": {
           "type": "number",
           "default": 0.01,
           "description": "Default point size."
         },
-        "3dviewer-light.showPoints": {
+        "3dpreview.showPoints": {
           "type": "boolean",
           "default": false,
           "description": "Show point cloud."
         },
-        "3dviewer-light.showWireframe": {
+        "3dpreview.showWireframe": {
           "type": "boolean",
           "default": false,
           "description": "Show wireframe."
         },
-        "3dviewer-light.showMesh": {
+        "3dpreview.showMesh": {
           "type": "boolean",
           "default": true,
           "description": "Show mesh triangles."
         },
-        "3dviewer-light.showGridHelper": {
+        "3dpreview.showGridHelper": {
           "type": "boolean",
           "default": true,
           "description": "Show grid helper."
         },
-        "3dviewer-light.backgroundColor": {
+        "3dpreview.backgroundColor": {
           "type": "string",
           "default": "#121212",
           "description": "Default background color."
         },
-        "3dviewer-light.pointColor": {
+        "3dpreview.pointColor": {
           "type": "string",
           "default": "#cc0000",
           "description": "Default point color."
         },
-        "3dviewer-light.fogDensity": {
+        "3dpreview.fogDensity": {
           "type": "number",
           "default": 0.0,
           "description": "Fog density."
