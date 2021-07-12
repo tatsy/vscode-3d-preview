@@ -10,7 +10,7 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 
 |     | point | mesh |
 |:---:|:-----:|:----:|
-| obj | x | o |
+| obj | o | o |
 | off | o | o |
 | pcd | o | x |
 | ply | o | o |
@@ -23,14 +23,16 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 
 #### Point cloud preview
 
-![mesh](images/point_preview.jpg)
+![points](images/point_preview.jpg)
+
+#### Large color point cloud
+
+![color_points](images/color_points.jpg)
 
 ## FAQ
 
 * Q. When I drag&drop a mesh file, a blank display is shown.
     * A. To show a 3D data using this extension, you should first open a workspace including the 3D data that you want to open.
-* Q. Wireframe width does not change.
-    * A. It's because limitation of the newer OpenGL API that limits the wireframe width to be 1.
 
 ## Reference
 

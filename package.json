@@ -3,7 +3,7 @@
   "publisher": "tatsy",
   "displayName": "vscode-3d-preview",
   "description": "VS Code 3D Preview",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "icon": "logo.png",
   "homepage": "https://github.com/tatsy/vscode-3d-preview",
   "repository": {
