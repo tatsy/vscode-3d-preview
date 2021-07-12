@@ -13,16 +13,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Setup node
         uses: actions/setup-node@v2
         with:
           node-version: '14'
           cache: 'npm'
+
       - name: VSCE package
         run: |
           npm install
           npm install -g vsce
           vsce package
+
+      - name: Parse tag string
+        id: tag_string
+        run: echo ::set-output name=result::${GITHUB_REF#refs/*/v}
 
       - name: Create Release
         id: create_release
@@ -36,6 +42,7 @@ jobs:
             Auto release from GitHub action.
           draft: false
           prerelease: false
+
       - name: Upload Release Asset
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
@@ -43,6 +50,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./vscode-3d-preview-${{ github.ref }}.vsix
-          asset_name: vscode-3d-preview-${{ github.ref }}.vsix
+          asset_path: ./vscode-3d-preview-${{ steps.tag_string.outputs.result }}.vsix
+          asset_name: vscode-3d-preview-${{ steps.tag_string.outputs.result }}.vsix
           asset_content_type: application/vsix
