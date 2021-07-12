@@ -10,11 +10,11 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 
 |     | point | mesh |
 |:---:|:-----:|:----:|
-| obj | o | x |
+| obj | x | o |
 | off | o | o |
 | pcd | o | x |
 | ply | o | o |
-| stl | o | x |
+| stl | x | o |
 | xyz | o | x |
 
 #### Mesh preview
