@@ -34,11 +34,9 @@ class Viewer {
     };
 
     // GUI
-    this.initGui();
     this.initRenderer();
     this.initScene();
     this.initLight();
-    this.initHelpers();
 
     // check extension
     this.addMesh(this.params.fileToLoad);
@@ -50,19 +48,25 @@ class Viewer {
   }
 
   initGui() {
+    // geometry based parameter update
+    const extent = getBBoxMaxExtent(this.points.geometry);
+    this.params.pointSize = extent / 100.0;
+    this.params.pointMaxSize = extent / 10.0;
+
+    this.params.gridHelper.unit = Math.pow(10, Math.floor(Math.log10(extent)));
+    this.params.gridHelper.size = this.params.gridHelper.unit * 1000;
+
+    // set gui
     console.log(this.params);
     this.gui.add(this.params, 'showPoints')
       .name('Points');
     this.gui.add(this.params, 'pointSize')
-      .min(0).max(20).max(this.params.pointMaxSize)
+      .min(0).max(this.params.pointMaxSize)
       .name('Point size');
     this.gui.addColor(this.params, 'pointColor')
       .name('Point color');
     this.gui.add(this.params, 'showWireframe')
       .name('Wireframe');
-    this.gui.add(this.params, 'wireframeWidth')
-      .min(0).max(20).max(this.params.wireframeMaxWidth)
-      .name('Wireframe width');
     this.gui.addColor(this.params, 'wireframeColor')
       .name('Wireframe color');
     this.gui.add(this.params, 'showMesh')
@@ -74,6 +78,7 @@ class Viewer {
       .name('Fog');
 
     let folder = this.gui.addFolder('Grid Helper');
+    folder.open();
     folder.add(this.params, 'showGridHelper')
       .name('show');
     folder.add(this.params.gridHelper, 'size')
@@ -131,6 +136,10 @@ class Viewer {
       this.scene.remove(this.axisHelper);
     }
 
+    // BBox center
+    var center = getBBoxCenter(this.points.geometry);
+    var extent = getBBoxMaxExtent(this.points.geometry);
+
     // Grid helper
     const size = this.params.gridHelper.size;
     const unit = this.params.gridHelper.unit;
@@ -139,12 +148,17 @@ class Viewer {
       this.gridHelper.size !== size ||
       this.gridHelper.divisions !== divisions) {
       this.gridHelper = new THREE.GridHelper(size, divisions);
+      // this.gridHelper.position.set(center);
       this.gridHelper.name = 'gridHelper';
     }
 
     // Axis helper
     if (this.axisHelper === null) {
-      this.axisHelper = new THREE.AxisHelper(1.0);
+      console.log(extent);
+      this.axisHelper = new THREE.AxisHelper(extent);
+      this.axisHelper.position.x += center.x - extent * 0.5;
+      this.axisHelper.position.y += center.y - extent * 0.5;
+      this.axisHelper.position.z += center.z - extent * 0.5;
       this.axisHelper.material.linewidth = 10;
       this.axisHelper.name = 'axisHelper';
     }
@@ -281,6 +295,8 @@ class Viewer {
       } catch (e) { console.error(e); }
 
       self.initCamera();
+      self.initGui();
+      self.initHelpers();
       self.animate();
     }.bind(self));
   }

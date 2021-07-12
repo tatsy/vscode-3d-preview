@@ -6,6 +6,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## v0.2.0
 
+- FPS display.
+- Automatic point size.
+- Automatic positioning of gird/axis helpers.
 - Automatic check whether `*.ply`, `*.obj`, and `*.off` files represent a mesh or a point cloud.
 - Wireframe color change support.
 

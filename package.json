@@ -59,30 +59,10 @@
     "configuration": {
       "title": "VSCode 3D Preview",
       "properties": {
-        "3dpreview.pointMaxSize": {
-          "type": "number",
-          "default": 10.0,
-          "description": "Maximum point size."
-        },
-        "3dpreview.pointSize": {
-          "type": "number",
-          "default": 0.01,
-          "description": "Default point size."
-        },
         "3dpreview.showPoints": {
           "type": "boolean",
           "default": false,
           "description": "Show point cloud."
-        },
-        "3dpreview.wireframeMaxWidth": {
-          "type": "number",
-          "default": 10.0,
-          "description": "Maximum wireframe width."
-        },
-        "3dpreview.wireframeWidth": {
-          "type": "number",
-          "default": 0.01,
-          "description": "Default wireframe width."
         },
         "3dpreview.showWireframe": {
           "type": "boolean",

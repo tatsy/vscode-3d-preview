@@ -42,7 +42,18 @@ function getBBoxCenter(geometry) {
   return center;
 }
 
+function getBBoxMaxExtent(geometry) {
+  geometry.computeBoundingBox();
+
+  var cx = (geometry.boundingBox.max.x - geometry.boundingBox.min.x);
+  var cy = (geometry.boundingBox.max.y - geometry.boundingBox.min.y);
+  var cz = (geometry.boundingBox.max.z - geometry.boundingBox.min.z);
+
+  return Math.max(cx, Math.max(cy, cz));
+}
+
 function autoCameraPos(geometry) {
+  geometry.computeBoundingBox();
   
   var cx = (geometry.boundingBox.max.x - geometry.boundingBox.min.x) / 2;
   var cy = (geometry.boundingBox.max.y - geometry.boundingBox.min.y) / 2;

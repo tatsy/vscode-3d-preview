@@ -93,11 +93,9 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
     const initialData = {
       fileToLoad: uri.toString(),
       backgroundColor: config.get('backgroundColor', '#0b1447'),
-      pointMaxSize: config.get('pointMaxSize', 0.01),
+      pointMaxSize: config.get('pointMaxSize', 1.0),
       pointSize: config.get('pointSize', 0.01),
       showPoints: config.get('showPoints', false),
-      wireframeMaxWidth: config.get('wireframeMaxWidth', 0.01),
-      wireframeWidth: config.get('wireframeWidth', 0.01),
       showWireframe: config.get('showWireframe', false),
       showMesh: config.get('showMesh', true),
       showGridHelper: config.get('showGridHelper', true),
