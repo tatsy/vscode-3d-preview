@@ -4,6 +4,11 @@ All notable changes to the "vscode-3dpreview" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## v0.2.0
+
+- Automatic check whether `*.ply`, `*.obj`, and `*.off` files represent a mesh or a point cloud.
+- Wireframe color change support.
+
 ## v0.1.0
 
 - Initial release

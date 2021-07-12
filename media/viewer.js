@@ -16,8 +16,10 @@ class Viewer {
     });
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(
-      45.0, window.innerWidth / window.innerHeight, 0.1, 1000.0
+      45.0, window.innerWidth / window.innerHeight, 0.1, 5000.0
     );
+    this.stats = new Stats();
+    this.stats.showPanel(0);
     this.gridHelper = null;
     this.axisHelper = null;
     this.gui = new dat.GUI();
@@ -31,10 +33,6 @@ class Viewer {
       unit: 1
     };
 
-    const meshSupport = isMeshSupport(this.params.fileToLoad);
-    this.params.showMesh = meshSupport;
-    this.params.showPoints = !meshSupport;
-
     // GUI
     this.initGui();
     this.initRenderer();
@@ -47,10 +45,12 @@ class Viewer {
 
     // add DOM
     document.body.appendChild(this.renderer.domElement);
+    document.body.appendChild(this.stats.domElement);
     window.addEventListener('resize', this.onWindowResize.bind(this), false);
   }
 
   initGui() {
+    console.log(this.params);
     this.gui.add(this.params, 'showPoints')
       .name('Points');
     this.gui.add(this.params, 'pointSize')
@@ -60,6 +60,11 @@ class Viewer {
       .name('Point color');
     this.gui.add(this.params, 'showWireframe')
       .name('Wireframe');
+    this.gui.add(this.params, 'wireframeWidth')
+      .min(0).max(20).max(this.params.wireframeMaxWidth)
+      .name('Wireframe width');
+    this.gui.addColor(this.params, 'wireframeColor')
+      .name('Wireframe color');
     this.gui.add(this.params, 'showMesh')
       .name('Mesh');
     this.gui.addColor(this.params, 'backgroundColor')
@@ -88,6 +93,7 @@ class Viewer {
   }
 
   animate() {
+    this.stats.begin();
     requestAnimationFrame(this.animate.bind(this));
     var time = Date.now();
     if (this.lastTime !== time) {
@@ -96,6 +102,7 @@ class Viewer {
     }
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
+    this.stats.end();
   }
 
   initCamera() {
@@ -105,7 +112,7 @@ class Viewer {
     const camPos = autoCameraPos(this.points.geometry);
 
     this.camera.position.copy(camPos);
-    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.controls = new THREE.TrackballControls(this.camera, this.renderer.domElement);
     this.controls.target = camTarget;
   }
 
@@ -150,25 +157,30 @@ class Viewer {
   }
 
   updateGui() {
+    // Points
     if (this.params.showPoints) {
       this.points.material.size = this.params.pointSize;
     } else {
       this.points.material.size = 0;
     }
 
+    if (this.monochrome) {
+      this.points.material.color = new THREE.Color(this.params.pointColor);
+    }
+
+    // Mesh
     this.scene.remove(this.mesh);
     if (this.params.showMesh) {
       this.scene.add(this.mesh);
     }
 
+    // Wireframe
     this.scene.remove(this.wireframe);
     if (this.params.showWireframe) {
       this.scene.add(this.wireframe);
     }
-
-    if (this.monochrome) {
-      this.points.material.color = new THREE.Color(this.params.pointColor);
-    }
+    this.wireframe.material.color = new THREE.Color(this.params.wireframeColor);
+    this.wireframe.material.wireframeLinewidth = this.params.wireframeWidth;
 
     this.initScene();
     this.initHelpers();
@@ -191,10 +203,19 @@ class Viewer {
         geometry = object;
       } else if (object.isGroup) {
         // merge geometries
+        console.log(object);
         geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(
           object.children.map(child =>
             child.geometry.clone().applyMatrix4(child.matrix))
         );
+
+        // Add indices if not exist
+        console.log(object.children[0].isPoints);
+        if (geometry.index === null && !object.children[0].isPoints) {
+          var nVerts = geometry.getAttribute('position').length / 3;
+          var indices = Array.from(Array(nVerts), (v, k) => k);
+          geometry.setIndex(indices);
+        }
       } else {
         // expect object is THREE.Mesh
         geometry = object.geometry;
@@ -202,6 +223,11 @@ class Viewer {
 
       console.log(geometry);
 
+      // mesh support
+      const meshSupport = geometry.index !== null;
+      this.params.showMesh = meshSupport;
+      this.params.showPoints = !meshSupport;
+  
       // add points
       const sprite = new THREE.TextureLoader().load('three/textures/sprites/disc.png');
       var pointsMaterial = new THREE.PointsMaterial({
@@ -242,16 +268,16 @@ class Viewer {
         self.scene.add(self.mesh);
 
         var wiremat = new THREE.MeshStandardMaterial({
-          color: 0x0000ff,
+          color: self.params.wireframeColor,
           roughness: 0.1,
           flatShading: true,
           side: THREE.DoubleSide,
-          wireframe: true
+          wireframe: true,
+          wireframeLinewidth: self.params.wireframeWidth
         });
         self.wireframe = new THREE.Mesh(geometry, wiremat);
         self.wireframe.name = base + '_wireframe';
         self.scene.add(self.wireframe);
-
       } catch (e) { console.error(e); }
 
       self.initCamera();

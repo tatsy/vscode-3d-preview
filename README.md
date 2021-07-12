@@ -27,8 +27,10 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 
 ## FAQ
 
-* When I drag&drop a mesh file, a blank display is shown.
-    * To show a 3D data using this extension, you should first open a workspace including the 3D data that you want to open.
+* Q. When I drag&drop a mesh file, a blank display is shown.
+    * A. To show a 3D data using this extension, you should first open a workspace including the 3D data that you want to open.
+* Q. Wireframe width does not change.
+    * A. It's because limitation of the newer OpenGL API that limits the wireframe width to be 1.
 
 ## Reference
 

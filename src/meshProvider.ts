@@ -92,14 +92,17 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
     const config = vscode.workspace.getConfiguration('3dpreview');
     const initialData = {
       fileToLoad: uri.toString(),
-      pointMaxSize: config.get('pointMaxSize', 0.002),
       backgroundColor: config.get('backgroundColor', '#0b1447'),
+      pointMaxSize: config.get('pointMaxSize', 0.01),
       pointSize: config.get('pointSize', 0.01),
       showPoints: config.get('showPoints', false),
+      wireframeMaxWidth: config.get('wireframeMaxWidth', 0.01),
+      wireframeWidth: config.get('wireframeWidth', 0.01),
       showWireframe: config.get('showWireframe', false),
       showMesh: config.get('showMesh', true),
       showGridHelper: config.get('showGridHelper', true),
-      pointColor: config.get('pointColor', '#ffffff'),
+      pointColor: config.get('pointColor', '#cc0000'),
+      wireframeColor: config.get('wireframeColor', '#0000ff'),
       fogDensity: config.get('fogDensity', 0.01)
     };
     return `<meta id="vscode-3dviewer-data" data-settings="${JSON.stringify(initialData).replace(/"/g, '&quot;')}">`;
@@ -109,7 +112,9 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
     const scripts = [
       this.getMediaWebviewUri(webview, 'three/three.min.js'),
       this.getMediaWebviewUri(webview, 'three/dat.gui.min.js'),
+      this.getMediaWebviewUri(webview, 'three/stats.min.js'),
       this.getMediaWebviewUri(webview, 'three/OrbitControls.js'),
+      this.getMediaWebviewUri(webview, 'three/TrackballControls.js'),
       this.getMediaWebviewUri(webview, 'three/BufferGeometryUtils.js'),
       this.getMediaWebviewUri(webview, 'three/loaders/LoaderSupport.js'),
       this.getMediaWebviewUri(webview, 'three/loaders/OBJLoader.js'),
