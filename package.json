@@ -3,7 +3,7 @@
   "publisher": "tatsy",
   "displayName": "vscode-3d-preview",
   "description": "VS Code 3D Preview",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "icon": "logo.png",
   "homepage": "https://github.com/tatsy/vscode-3d-preview",
   "repository": {
@@ -17,8 +17,19 @@
     "Other"
   ],
   "keywords": [
+    "3d",
+    "obj",
+    "off",
+    "pcd",
+    "ply",
+    "stl",
+    "xyz",
     "mesh",
-    "point cloud"
+    "polygon",
+    "point cloud",
+    "point set",
+    "viewer",
+    "vscode"
   ],
   "activationEvents": [
     "onCustomEditor:3dpreview.viewer"
@@ -59,6 +70,11 @@
     "configuration": {
       "title": "VSCode 3D Preview",
       "properties": {
+        "3dpreview.hideControlsOnStart": {
+          "type": "boolean",
+          "default": false,
+          "description": "Fold the control panel if true is specified."
+        },
         "3dpreview.showPoints": {
           "type": "boolean",
           "default": false,

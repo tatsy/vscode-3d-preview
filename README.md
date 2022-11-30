@@ -1,5 +1,11 @@
 # VSCode 3D Viewer Light
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/tatsy.vscode-3d-preview)](https://marketplace.visualstudio.com/items?itemName=tatsy.vscode-3d-preview)
+![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/tatsy.vscode-3d-preview)
+
+**See in VS Marketplace:** [vscode-3d-preview](https://marketplace.visualstudio.com/items?itemName=tatsy.vscode-3d-preview)
+
 ## Description
 
 This extension is inspired by [vscode-3dviewer](https://github.com/stef-levesque/vscode-3dviewer) but has minimal features to preview triangular meshes, and point clouds.
@@ -42,4 +48,4 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 
 ## Lincense
 
-MIT License 2021 (c) Tatsuya Yatagawa
+MIT License 2021-2022 (c) Tatsuya Yatagawa

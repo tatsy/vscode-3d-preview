@@ -92,6 +92,7 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
     const config = vscode.workspace.getConfiguration('3dpreview');
     const initialData = {
       fileToLoad: uri.toString(),
+      hideControlsOnStart: config.get('hideControlsOnStart', false),
       backgroundColor: config.get('backgroundColor', '#0b1447'),
       pointMaxSize: config.get('pointMaxSize', 1.0),
       pointSize: config.get('pointSize', 0.01),
@@ -101,7 +102,8 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
       showGridHelper: config.get('showGridHelper', true),
       pointColor: config.get('pointColor', '#cc0000'),
       wireframeColor: config.get('wireframeColor', '#0000ff'),
-      fogDensity: config.get('fogDensity', 0.01)
+      fogDensity: config.get('fogDensity', 0.01),
+
     };
     return `<meta id="vscode-3dviewer-data" data-settings="${JSON.stringify(initialData).replace(/"/g, '&quot;')}">`;
   }

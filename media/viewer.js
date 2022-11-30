@@ -77,6 +77,10 @@ class Viewer {
       .min(0).max(1)
       .name('Fog');
 
+    if (this.params.hideControlsOnStart) {
+      this.gui.close();
+    }
+
     let folder = this.gui.addFolder('Grid Helper');
     folder.open();
     folder.add(this.params, 'showGridHelper')
