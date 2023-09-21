@@ -16,7 +16,7 @@ class Viewer {
     });
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(
-      45.0, window.innerWidth / window.innerHeight, 0.1, 5000.0
+      45.0, window.innerWidth / window.innerHeight, 0.000001, 5000.0
     );
     this.stats = new Stats();
     this.stats.showPanel(0);
