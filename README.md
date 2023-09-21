@@ -8,11 +8,11 @@
 
 ## Description
 
-This extension is inspired by [vscode-3dviewer](https://github.com/stef-levesque/vscode-3dviewer) but has minimal features to preview triangular meshes, and point clouds.
+This extension is inspired by [vscode-3dviewer](https://github.com/stef-levesque/vscode-3dviewer) but has minimal features to preview triangular meshes and point clouds.
 
 ## Features
 
-This extension supports 3D formats equally as [Open3D](http://www.open3d.org/docs/0.9.0/tutorial/Basic/file_io.html) (but partly not support currently). 
+This extension supports 3D formats equally as [Open3D](http://www.open3d.org/docs/0.9.0/tutorial/Basic/file_io.html) (but partly not supported currently). 
 
 |     | point | mesh |
 |:---:|:-----:|:----:|
@@ -37,8 +37,8 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 
 ## FAQ
 
-* Q. When I drag&drop a mesh file, a blank display is shown.
-    * A. To show a 3D data using this extension, you should first open a workspace including the 3D data that you want to open.
+* Q. When I drag and drop a mesh file, a blank display is shown.
+    * A. To show 3D data using this extension, you should first open a workspace including the 3D data that you want to open.
 
 ## Reference
 
@@ -46,6 +46,6 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 * [vscode-pc-viewer](https://github.com/Obarads/vscode-pc-viewer)
 * [three.js](https://threejs.org/)
 
-## Lincense
+## License
 
 MIT License 2021-2022 (c) Tatsuya Yatagawa

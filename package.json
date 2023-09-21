@@ -3,7 +3,7 @@
   "publisher": "tatsy",
   "displayName": "vscode-3d-preview",
   "description": "VS Code 3D Preview",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "icon": "logo.png",
   "homepage": "https://github.com/tatsy/vscode-3d-preview",
   "repository": {
@@ -11,7 +11,7 @@
     "url": "https://github.com/tatsy/vscode-3d-preview"
   },
   "engines": {
-    "vscode": "^1.55.0"
+    "vscode": "^1.73.1"
   },
   "categories": [
     "Other"
@@ -140,7 +140,7 @@
     "mocha": "^10.1.0",
     "tslint": "^6.1.3",
     "typescript": "^4.9.3",
-    "vsce": "^2.14.0",
+    "vsce": "^2.15.0",
     "vscode-test": "^1.5.2"
   }
 }
