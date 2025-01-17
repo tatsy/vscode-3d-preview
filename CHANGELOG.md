@@ -4,6 +4,11 @@ All notable changes to the "vscode-3dpreview" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## v0.2.2
+
+- Revise JS codes to follow ES6.
+- Performance tuning.
+
 ## v0.2.1
 
 - Add a new option to close control panel by default.

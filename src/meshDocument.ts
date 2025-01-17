@@ -1,6 +1,5 @@
-import { MeshDepthMaterial } from 'three';
-import * as vscode from 'vscode';
-import { disposeAll } from './utils';
+import * as vscode from "vscode";
+import { disposeAll } from "./utils";
 
 export class MeshDocument implements vscode.CustomDocument {
   private isDisposed = false;
@@ -8,10 +7,14 @@ export class MeshDocument implements vscode.CustomDocument {
 
   public constructor(public uri: vscode.Uri) {}
 
-  private readonly _onDidDispose = this._register(new vscode.EventEmitter<void>());
+  private readonly _onDidDispose = this._register(
+    new vscode.EventEmitter<void>()
+  );
   public readonly onDidDispose = this._onDidDispose.event;
 
-  private readonly _onDidChangeDocument = this._register(new vscode.EventEmitter<void>());
+  private readonly _onDidChangeDocument = this._register(
+    new vscode.EventEmitter<void>()
+  );
   public readonly onDidChangeDocument = this._onDidChangeDocument.event;
 
   dispose(): void {

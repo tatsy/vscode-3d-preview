@@ -1,6 +1,6 @@
 # VSCode 3D Viewer Light
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL3](https://img.shields.io/badge/License-GPL3-green.svg)](https://opensource.org/licenses/gpl-3-0)
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/tatsy.vscode-3d-preview)](https://marketplace.visualstudio.com/items?itemName=tatsy.vscode-3d-preview)
 ![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/tatsy.vscode-3d-preview)
 
@@ -48,4 +48,4 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 
 ## Lincense
 
-MIT License 2021-2022 (c) Tatsuya Yatagawa
+GNU General Public License v3 2021-2025 (c) Tatsuya Yatagawa

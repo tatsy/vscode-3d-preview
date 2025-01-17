@@ -3,7 +3,7 @@
   "publisher": "tatsy",
   "displayName": "vscode-3d-preview",
   "description": "VS Code 3D Preview",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "icon": "logo.png",
   "homepage": "https://github.com/tatsy/vscode-3d-preview",
   "repository": {
@@ -95,6 +95,11 @@
           "default": true,
           "description": "Show grid helper."
         },
+        "3dpreview.showAxesHelper": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show axes helper."
+        },
         "3dpreview.backgroundColor": {
           "type": "string",
           "default": "#121212",
@@ -109,6 +114,11 @@
           "type": "string",
           "default": "#0000ff",
           "description": "Default wireframe color."
+        },
+        "3dpreview.wireframeWidth": {
+          "type": "number",
+          "default": 0.5,
+          "description": "Default wireframe width."
         },
         "3dpreview.fogDensity": {
           "type": "number",
@@ -127,20 +137,18 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/dat-gui": "^0.6.3",
-    "@types/glob": "^8.0.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "18.x",
-    "@types/three": "^0.146.0",
-    "@types/vscode": "^1.73.1",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
-    "eslint": "^8.28.0",
-    "glob": "^8.0.3",
-    "mocha": "^10.1.0",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.96.0",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "eslint": "^9.18.0",
+    "glob": "^11.0.1",
+    "mocha": "^11.0.1",
     "tslint": "^6.1.3",
-    "typescript": "^4.9.3",
-    "vsce": "^2.14.0",
-    "vscode-test": "^1.5.2"
+    "typescript": "^5.7.3",
+    "vsce": "^2.15.0",
+    "vscode-test": "^1.6.1"
   }
 }

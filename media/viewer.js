@@ -1,6 +1,12 @@
+import * as THREE from "three";
+import { GUI } from "./three/libs/lil-gui.module.min.js";
+import { OrbitControls } from "./three/controls/OrbitControls.js";
+import { LineMaterial } from "./three/lines/LineMaterial.js";
+import { Line2 } from "./three/lines/Line2.js";
+import { WireframeGeometry2 } from "./three/lines/WireframeGeometry2.js";
+import * as utils from "./utils.js";
 
 class Viewer {
-  monochrome = false;
   controls;
   points;
   mesh;
@@ -9,172 +15,126 @@ class Viewer {
   lastTime;
 
   constructor() {
-    // Three JS instances
-    this.renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true
-    });
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(
-      45.0, window.innerWidth / window.innerHeight, 0.1, 5000.0
-    );
-    this.stats = new Stats();
-    this.stats.showPanel(0);
+    this.gui = null;
     this.gridHelper = null;
-    this.axisHelper = null;
-    this.gui = new dat.GUI();
+    this.axesHelper = null;
+    this.monochrome = false;
 
     // Parameters
     this.params = JSON.parse(
-      document.getElementById('vscode-3dviewer-data').getAttribute('data-settings')
+      document
+        .getElementById("vscode-3dviewer-data")
+        .getAttribute("data-settings")
     );
     this.params.gridHelper = {
       size: 2000,
-      unit: 1
+      unit: 1,
     };
 
-    // GUI
-    this.initRenderer();
-    this.initScene();
-    this.initLight();
-
-    // check extension
-    this.addMesh(this.params.fileToLoad);
-
-    // add DOM
-    document.body.appendChild(this.renderer.domElement);
-    document.body.appendChild(this.stats.domElement);
-    window.addEventListener('resize', this.onWindowResize.bind(this), false);
-  }
-
-  initGui() {
-    // geometry based parameter update
-    const extent = getBBoxMaxExtent(this.points.geometry);
-    this.params.pointSize = extent / 100.0;
-    this.params.pointMaxSize = extent / 10.0;
-
-    this.params.gridHelper.unit = Math.pow(10, Math.floor(Math.log10(extent)));
-    this.params.gridHelper.size = this.params.gridHelper.unit * 1000;
-
-    // set gui
-    console.log(this.params);
-    this.gui.add(this.params, 'showPoints')
-      .name('Points');
-    this.gui.add(this.params, 'pointSize')
-      .min(0).max(this.params.pointMaxSize)
-      .name('Point size');
-    this.gui.addColor(this.params, 'pointColor')
-      .name('Point color');
-    this.gui.add(this.params, 'showWireframe')
-      .name('Wireframe');
-    this.gui.addColor(this.params, 'wireframeColor')
-      .name('Wireframe color');
-    this.gui.add(this.params, 'showMesh')
-      .name('Mesh');
-    this.gui.addColor(this.params, 'backgroundColor')
-      .name('Background color');
-    this.gui.add(this.params, 'fogDensity')
-      .min(0).max(1)
-      .name('Fog');
-
-    if (this.params.hideControlsOnStart) {
-      this.gui.close();
-    }
-
-    let folder = this.gui.addFolder('Grid Helper');
-    folder.open();
-    folder.add(this.params, 'showGridHelper')
-      .name('show');
-    folder.add(this.params.gridHelper, 'size')
-      .name('size');
-    folder.add(this.params.gridHelper, 'unit')
-      .name('unit');
-  }
-
-  initRenderer() {
+    // Three JS instances
+    this.renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+    });
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-  }
+    document.body.appendChild(this.renderer.domElement);
 
-  initScene() {
-    this.scene.fog = new THREE.FogExp2(this.params.backgroundColor, this.params.fogDensity);
+    // Scene
+    this.scene = new THREE.Scene();
+    this.scene.fog = new THREE.FogExp2(
+      this.params.backgroundColor,
+      this.params.fogDensity
+    );
     this.scene.background = new THREE.Color(this.params.backgroundColor);
-  }
 
-  animate() {
-    this.stats.begin();
-    requestAnimationFrame(this.animate.bind(this));
-    var time = Date.now();
-    if (this.lastTime !== time) {
-      this.lastTime = time;
-      this.updateGui();
-    }
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
-    this.stats.end();
-  }
-
-  initCamera() {
-    this.points.geometry.computeBoundingBox();
-
-    const camTarget = getBBoxCenter(this.points.geometry);
-    const camPos = autoCameraPos(this.points.geometry);
-
-    this.camera.position.copy(camPos);
-    this.controls = new THREE.TrackballControls(this.camera, this.renderer.domElement);
-    this.controls.target = camTarget;
-  }
-
-  initLight() {
     const light = new THREE.HemisphereLight(0x888888, 0x333333, 1.0);
     this.scene.add(light);
+
+    // Camera
+    this.camera = new THREE.PerspectiveCamera(
+      45.0,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      5000.0
+    );
+
+    // check extension
+    this.setMesh(this.params.fileToLoad);
   }
 
-  initHelpers() {
+  render() {
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  updateHelpers() {
     // Remove current helpers
     if (this.gridHelper !== null) {
       this.scene.remove(this.gridHelper);
     }
 
-    if (this.axisHelper !== null) {
-      this.scene.remove(this.axisHelper);
+    if (this.axesHelper !== null) {
+      this.scene.remove(this.axesHelper);
     }
 
     // BBox center
-    var center = getBBoxCenter(this.points.geometry);
-    var extent = getBBoxMaxExtent(this.points.geometry);
+    const center = utils.getBBoxCenter(this.points.geometry);
+    const extent = utils.getBBoxMaxExtent(this.points.geometry);
 
     // Grid helper
-    const size = this.params.gridHelper.size;
-    const unit = this.params.gridHelper.unit;
-    const divisions = size / unit;
-    if (this.gridHelper === null ||
-      this.gridHelper.size !== size ||
-      this.gridHelper.divisions !== divisions) {
-      this.gridHelper = new THREE.GridHelper(size, divisions);
-      // this.gridHelper.position.set(center);
-      this.gridHelper.name = 'gridHelper';
+    if (this.params.showGridHelper) {
+      const size = this.params.gridHelper.size;
+      const unit = this.params.gridHelper.unit;
+      const divisions = size / unit;
+      if (
+        this.gridHelper === null ||
+        this.gridHelper.size !== size ||
+        this.gridHelper.divisions !== divisions
+      ) {
+        const colorCenterLine = new THREE.Color("#888888");
+        const colorGrid = new THREE.Color("#888888");
+        this.gridHelper = new THREE.GridHelper(
+          size,
+          divisions,
+          colorCenterLine,
+          colorGrid
+        );
+        this.gridHelper.position.x += center.x - extent * 0.5;
+        this.gridHelper.position.y += center.y - extent * 0.5;
+        this.gridHelper.position.z += center.z - extent * 0.5;
+        this.gridHelper.material.linewidth = 10;
+        this.gridHelper.name = "gridHelper";
+      }
+
+      this.scene.add(this.gridHelper);
     }
 
     // Axis helper
-    if (this.axisHelper === null) {
-      console.log(extent);
-      this.axisHelper = new THREE.AxisHelper(extent);
-      this.axisHelper.position.x += center.x - extent * 0.5;
-      this.axisHelper.position.y += center.y - extent * 0.5;
-      this.axisHelper.position.z += center.z - extent * 0.5;
-      this.axisHelper.material.linewidth = 10;
-      this.axisHelper.name = 'axisHelper';
+    if (this.params.showAxesHelper) {
+      if (this.axesHelper === null) {
+        this.axesHelper = new THREE.AxesHelper(extent);
+        this.axesHelper.position.x += center.x - extent * 0.5;
+        this.axesHelper.position.y += center.y - extent * 0.5;
+        this.axesHelper.position.z += center.z - extent * 0.5;
+        this.axesHelper.material.linewidth = 10;
+        this.axesHelper.name = "axesHelper";
+      }
+
+      this.scene.add(this.axesHelper);
     }
 
-    // Display
-    if (this.params.showGridHelper) {
-      this.scene.add(this.gridHelper);
-      this.scene.add(this.axisHelper);
-    }
+    // Repaint
+    this.render();
   }
 
-  updateGui() {
+  updateRender() {
+    // Fog
+    this.scene.fog = new THREE.FogExp2(
+      this.params.backgroundColor,
+      this.params.fogDensity
+    );
+    this.scene.background = new THREE.Color(this.params.backgroundColor);
+
     // Points
     if (this.params.showPoints) {
       this.points.material.size = this.params.pointSize;
@@ -193,27 +153,29 @@ class Viewer {
     }
 
     // Wireframe
+    this.wireframe.material.color = new THREE.Color(this.params.wireframeColor);
+    this.wireframe.material.linewidth = this.params.wireframeWidth;
+
     this.scene.remove(this.wireframe);
     if (this.params.showWireframe) {
       this.scene.add(this.wireframe);
     }
-    this.wireframe.material.color = new THREE.Color(this.params.wireframeColor);
-    this.wireframe.material.wireframeLinewidth = this.params.wireframeWidth;
 
-    this.initScene();
-    this.initHelpers();
+    // Repaint
+    this.render();
   }
 
   onWindowResize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.render();
   }
 
-  addMesh(fileToLoad) {
+  setMesh(fileToLoad) {
     const self = this;
-    const base = basename(fileToLoad);
-    const loader = createModelLoader(fileToLoad);
+    const base = utils.basename(fileToLoad);
+    const loader = utils.createModelLoader(fileToLoad);
 
     loader.load(fileToLoad, function (object) {
       var geometry;
@@ -221,16 +183,15 @@ class Viewer {
         geometry = object;
       } else if (object.isGroup) {
         // merge geometries
-        console.log(object);
         geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(
-          object.children.map(child =>
-            child.geometry.clone().applyMatrix4(child.matrix))
+          object.children.map((child) =>
+            child.geometry.clone().applyMatrix4(child.matrix)
+          )
         );
 
         // Add indices if not exist
-        console.log(object.children[0].isPoints);
         if (geometry.index === null && !object.children[0].isPoints) {
-          var nVerts = geometry.getAttribute('position').length / 3;
+          var nVerts = geometry.getAttribute("position").length / 3;
           var indices = Array.from(Array(nVerts), (v, k) => k);
           geometry.setIndex(indices);
         }
@@ -239,71 +200,165 @@ class Viewer {
         geometry = object.geometry;
       }
 
-      console.log(geometry);
-
       // mesh support
       const meshSupport = geometry.index !== null;
-      this.params.showMesh = meshSupport;
-      this.params.showPoints = !meshSupport;
-  
+      self.params.showMesh = meshSupport;
+      self.params.showPoints = !meshSupport;
+
       // add points
-      const sprite = new THREE.TextureLoader().load('three/textures/sprites/disc.png');
-      var pointsMaterial = new THREE.PointsMaterial({
-        size: 35,
-        sizeAttenuation: true,
-        map: sprite,
-        alphaTest: 0.5,
-        transparent: true
-      });
-      self.points = new THREE.Points(geometry, pointsMaterial);
-      self.points.name = base + '_points';
+      const sprite = new THREE.TextureLoader().load(
+        "three/textures/sprites/disc.png",
+        () => {
+          const pointsMaterial = new THREE.PointsMaterial({
+            size: 35,
+            sizeAttenuation: true,
+            map: sprite,
+            alphaTest: 0.5,
+            transparent: true,
+          });
+          self.points = new THREE.Points(geometry, pointsMaterial);
+          self.points.name = base + "_points";
 
-      try {
-        if (geometry.getAttribute('color').length > 0) {
-          pointsMaterial.vertexColors = true;
+          try {
+            if (geometry.getAttribute("color").length > 0) {
+              pointsMaterial.vertexColors = true;
+            }
+          } catch (e) {
+            console.warn(e);
+            self.monochrome = true;
+          }
+
+          self.scene.add(self.points);
+
+          self.onMeshLoaded();
+          self.updateHelpers();
+          self.updateRender();
+          self.render();
         }
-      } catch (e) {
-        console.error(e);
-        self.monochrome = true;
-      }
-
-      self.scene.add(self.points);
+      );
 
       // add mesh
       try {
         geometry.computeVertexNormals();
 
+        // Mesh
         var material = new THREE.MeshStandardMaterial({
           color: 0xefefef,
           roughness: 0.1,
           flatShading: true,
-          side: THREE.DoubleSide
+          side: THREE.DoubleSide,
         });
         self.mesh = new THREE.Mesh(geometry, material);
         self.mesh.castShadow = true;
         self.mesh.receiveShadow = true;
-        self.mesh.name = base + '_mesh';
+        self.mesh.name = base + "_mesh";
         self.scene.add(self.mesh);
 
-        var wiremat = new THREE.MeshStandardMaterial({
+        // Wireframe
+        const wireMaterial = new LineMaterial({
           color: self.params.wireframeColor,
-          roughness: 0.1,
-          flatShading: true,
-          side: THREE.DoubleSide,
-          wireframe: true,
-          wireframeLinewidth: self.params.wireframeWidth
+          linewidth: 1.0,
         });
-        self.wireframe = new THREE.Mesh(geometry, wiremat);
-        self.wireframe.name = base + '_wireframe';
-        self.scene.add(self.wireframe);
-      } catch (e) { console.error(e); }
 
-      self.initCamera();
-      self.initGui();
-      self.initHelpers();
-      self.animate();
-    }.bind(self));
+        const edges = new WireframeGeometry2(geometry);
+        self.wireframe = new Line2(edges, wireMaterial);
+        self.wireframe.name = base + "_wireframe";
+        self.scene.add(self.wireframe);
+      } catch (e) {
+        console.error(e);
+      }
+
+      self.render();
+    });
+  }
+
+  onMeshLoaded() {
+    // Camera setup
+    this.points.geometry.computeBoundingBox();
+    const camTarget = utils.getBBoxCenter(this.points.geometry);
+    const camPos = utils.autoCameraPos(this.points.geometry);
+
+    this.camera.position.copy(camPos);
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.target = camTarget;
+    this.controls.addEventListener("change", () => this.render());
+    this.controls.update();
+
+    // GUI setup
+    const extent = utils.getBBoxMaxExtent(this.points.geometry);
+    this.params.pointSize = extent / 100.0;
+    this.params.pointMaxSize = extent / 10.0;
+
+    this.params.gridHelper.unit = Math.pow(10, Math.floor(Math.log10(extent)));
+    this.params.gridHelper.size = this.params.gridHelper.unit * 1000;
+
+    this.gui = new GUI();
+    this.gui
+      .add(this.params, "showPoints")
+      .name("Points")
+      .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, "pointSize")
+      .min(0)
+      .max(this.params.pointMaxSize)
+      .name("Point size")
+      .onChange(() => this.updateRender());
+    this.gui
+      .addColor(this.params, "pointColor")
+      .name("Point color")
+      .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, "showWireframe")
+      .name("Wireframe")
+      .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, "wireframeWidth")
+      .min(0)
+      .max(1.0)
+      .name("Wireframe width")
+      .onChange(() => this.updateRender());
+    this.gui
+      .addColor(this.params, "wireframeColor")
+      .name("Wireframe color")
+      .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, "showMesh")
+      .name("Mesh")
+      .onChange(() => this.updateRender());
+    this.gui
+      .addColor(this.params, "backgroundColor")
+      .name("Background color")
+      .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, "fogDensity")
+      .min(0)
+      .max(1)
+      .name("Fog")
+      .onChange(() => this.updateRender());
+
+    let folder = this.gui.addFolder("Grid Helper");
+    folder.open();
+    folder
+      .add(this.params, "showAxesHelper")
+      .name("show axes helper")
+      .onChange(() => this.updateHelpers());
+    folder
+      .add(this.params, "showGridHelper")
+      .name("show grid helper")
+      .onChange(() => this.updateHelpers());
+    folder
+      .add(this.params.gridHelper, "size")
+      .name("size")
+      .onChange(() => this.updateHelpers());
+    folder
+      .add(this.params.gridHelper, "unit")
+      .name("unit")
+      .onChange(() => this.updateHelpers());
+
+    if (this.params.hideControlsOnStart) {
+      this.gui.close();
+    }
   }
 }
 
-viewer = new Viewer();
+const viewer = new Viewer();
