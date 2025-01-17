@@ -6,7 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## v0.2.2
 
-- Default point size support (#7)
+- Default point size support ([#7](https://github.com/tatsy/vscode-3d-preview/issues/7))
 - Revise JS codes to follow ES6.
 - Performance tuning.
 
