@@ -11,7 +11,7 @@
     "url": "https://github.com/tatsy/vscode-3d-preview"
   },
   "engines": {
-    "vscode": "^1.55.0"
+    "vscode": "^1.96.0"
   },
   "categories": [
     "Other"
