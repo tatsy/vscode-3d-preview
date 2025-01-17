@@ -35,7 +35,7 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v2
+        uses: softprops/action-gh-release@v2
         with:
           files: ./vscode-3d-preview-${{ steps.tag_string.outputs.result }}.vsix
           draft: false
