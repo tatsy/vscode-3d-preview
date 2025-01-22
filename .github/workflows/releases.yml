@@ -30,12 +30,16 @@ jobs:
           vsce package
 
       - name: Parse tag string
-        id: tag_string
-        run: echo "result=${GITHUB_REF#refs/*/v}" >> $GITHUB_OUTPUT
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: tag_version
+        run: |
+          echo "result=${GITHUB_REF#refs/*/v}" >> $GITHUB_OUTPUT
 
       - name: Parse version in package.json
+        if: startsWith(github.ref, 'refs/tags/v')
         id: package_version
-        run: echo "result=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+        run: |
+          echo "result=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
 
       - name: Check if tag matches to package version
         if: startsWith(github.ref, 'refs/tags/v')
@@ -46,8 +50,8 @@ jobs:
           fi
 
       - name: GitHub Releases
-        if: startsWith(github.ref, 'refs/tags/v')
-        id: create_release
+        requires: [tag_version, package_version]
+        if: steps.tag_version.outputs.result == steps.package_version.outputs.result
         uses: softprops/action-gh-release@v2
         with:
           files: ./vscode-3d-preview-${{ steps.tag_string.outputs.result }}.vsix
@@ -55,5 +59,6 @@ jobs:
           prerelease: false
 
       - name: Publish to VS Code Marketplace
-        if: startsWith(github.ref, 'refs/tags/v')
+        requires: [tag_version, package_version]
+        if: steps.tag_version.outputs.result == steps.package_version.outputs.result
         run: vsce publish -p ${{ secrets.VSCODE_TOKEN }}
