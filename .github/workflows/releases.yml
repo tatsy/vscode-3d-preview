@@ -39,7 +39,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         id: package_version
         run: |
-          echo "result=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+          echo "result=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Check if tag matches to package version
         if: startsWith(github.ref, 'refs/tags/v')
