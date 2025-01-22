@@ -1,33 +1,37 @@
-import * as THREE from "three";
-import { PLYLoader } from "./three/loaders/PLYLoader.js";
-import { STLLoader } from "./three/loaders/STLLoader.js";
-import { XYZLoader } from "./three/loaders/XYZLoader.js";
-import { PCDLoader } from "./three/loaders/PCDLoader.js";
-import { OFFLoader } from "./three/loaders/OFFLoader.js";
-import { OBJLoader } from "./three/loaders/OBJLoader.js";
+import * as THREE from 'three';
+import { PLYLoader } from './three/loaders/PLYLoader.js';
+import { STLLoader } from './three/loaders/STLLoader.js';
+import { XYZLoader } from './three/loaders/XYZLoader.js';
+import { PCDLoader } from './three/loaders/PCDLoader.js';
+import { OFFLoader } from './three/loaders/OFFLoader.js';
+import { OBJLoader } from './three/loaders/OBJLoader.js';
 
 function basename(url) {
-  var name = url.split("").reverse().join("");
+  var name = url.split('').reverse().join('');
   name = /([^\/]*)/.exec(name);
-  name = name[1].split("").reverse().join("");
+  name = name[1].split('').reverse().join('');
   return name;
 }
 
 function extname(url) {
-  return url.split(".").pop().toLowerCase();
+  const index = url.lastIndexOf('.');
+  if (index === -1) {
+    return '';
+  }
+  return url.substring(index);
 }
 
 function isMeshSupport(fileToLoad) {
   switch (extname(fileToLoad)) {
-    case "stl":
+    case 'stl':
       return true;
-    case "off":
+    case 'off':
       return true;
-    case "ply":
+    case 'ply':
       return true;
-    case "xyz":
+    case 'xyz':
       return false;
-    case "pcd":
+    case 'pcd':
       return false;
     default:
       return true;
@@ -36,18 +40,20 @@ function isMeshSupport(fileToLoad) {
 
 function createModelLoader(fileToLoad) {
   switch (extname(fileToLoad)) {
-    case "stl":
+    case '.obj':
+      return new OBJLoader();
+    case '.stl':
       return new STLLoader();
-    case "ply":
+    case '.ply':
       return new PLYLoader();
-    case "xyz":
+    case '.xyz':
       return new XYZLoader();
-    case "pcd":
+    case '.pcd':
       return new PCDLoader();
-    case "off":
+    case '.off':
       return new OFFLoader();
     default:
-      return new OBJLoader();
+      throw new Error('Unsupported file format!');
   }
 }
 

@@ -1,10 +1,11 @@
-import * as THREE from "three";
-import { GUI } from "./three/libs/lil-gui.module.min.js";
-import { OrbitControls } from "./three/controls/OrbitControls.js";
-import { LineMaterial } from "./three/lines/LineMaterial.js";
-import { Line2 } from "./three/lines/Line2.js";
-import { WireframeGeometry2 } from "./three/lines/WireframeGeometry2.js";
-import * as utils from "./utils.js";
+import * as THREE from 'three';
+import { GUI } from './three/libs/lil-gui.module.min.js';
+import { OrbitControls } from './three/controls/OrbitControls.js';
+import { LineMaterial } from './three/lines/LineMaterial.js';
+import { Line2 } from './three/lines/Line2.js';
+import { WireframeGeometry2 } from './three/lines/WireframeGeometry2.js';
+import * as BufferGeometryUtils from './three/utils/BufferGeometryUtils.js';
+import * as utils from './utils.js';
 
 class Viewer {
   controls;
@@ -22,9 +23,7 @@ class Viewer {
 
     // Parameters
     this.params = JSON.parse(
-      document
-        .getElementById("vscode-3dviewer-data")
-        .getAttribute("data-settings")
+      document.getElementById('vscode-3dviewer-data').getAttribute('data-settings')
     );
     this.params.gridHelper = {
       size: 2000,
@@ -42,10 +41,7 @@ class Viewer {
 
     // Scene
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(
-      this.params.backgroundColor,
-      this.params.fogDensity
-    );
+    this.scene.fog = new THREE.FogExp2(this.params.backgroundColor, this.params.fogDensity);
     this.scene.background = new THREE.Color(this.params.backgroundColor);
 
     const light = new THREE.HemisphereLight(0x888888, 0x333333, 1.0);
@@ -91,19 +87,14 @@ class Viewer {
         this.gridHelper.size !== size ||
         this.gridHelper.divisions !== divisions
       ) {
-        const colorCenterLine = new THREE.Color("#888888");
-        const colorGrid = new THREE.Color("#888888");
-        this.gridHelper = new THREE.GridHelper(
-          size,
-          divisions,
-          colorCenterLine,
-          colorGrid
-        );
+        const colorCenterLine = new THREE.Color('#888888');
+        const colorGrid = new THREE.Color('#888888');
+        this.gridHelper = new THREE.GridHelper(size, divisions, colorCenterLine, colorGrid);
         this.gridHelper.position.x += center.x - extent * 0.5;
         this.gridHelper.position.y += center.y - extent * 0.5;
         this.gridHelper.position.z += center.z - extent * 0.5;
         this.gridHelper.material.linewidth = 10;
-        this.gridHelper.name = "gridHelper";
+        this.gridHelper.name = 'gridHelper';
       }
 
       this.scene.add(this.gridHelper);
@@ -117,7 +108,7 @@ class Viewer {
         this.axesHelper.position.y += center.y - extent * 0.5;
         this.axesHelper.position.z += center.z - extent * 0.5;
         this.axesHelper.material.linewidth = 10;
-        this.axesHelper.name = "axesHelper";
+        this.axesHelper.name = 'axesHelper';
       }
 
       this.scene.add(this.axesHelper);
@@ -129,10 +120,7 @@ class Viewer {
 
   updateRender() {
     // Fog
-    this.scene.fog = new THREE.FogExp2(
-      this.params.backgroundColor,
-      this.params.fogDensity
-    );
+    this.scene.fog = new THREE.FogExp2(this.params.backgroundColor, this.params.fogDensity);
     this.scene.background = new THREE.Color(this.params.backgroundColor);
 
     // Points
@@ -178,26 +166,33 @@ class Viewer {
     const loader = utils.createModelLoader(fileToLoad);
 
     loader.load(fileToLoad, function (object) {
-      var geometry;
+      let geometry = null;
+      let computeIndices = false;
       if (object.isGeometry || object.isBufferGeometry) {
+        // Geometry or BufferGeometry
+        console.log('The object is with type of "Geometry" or "BufferGeometry"');
         geometry = object;
+        if (utils.extname(fileToLoad) === '.stl') {
+          computeIndices = true;
+        }
       } else if (object.isGroup) {
         // merge geometries
-        geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(
-          object.children.map((child) =>
-            child.geometry.clone().applyMatrix4(child.matrix)
-          )
+        console.log('The object is with type of "THREE.Group"');
+        geometry = BufferGeometryUtils.mergeGeometries(
+          object.children.map((child) => child.geometry.clone().applyMatrix4(child.matrix))
         );
-
-        // Add indices if not exist
-        if (geometry.index === null && !object.children[0].isPoints) {
-          var nVerts = geometry.getAttribute("position").length / 3;
-          var indices = Array.from(Array(nVerts), (v, k) => k);
-          geometry.setIndex(indices);
-        }
+        computeIndices = !object.children[0].isPoints;
       } else {
         // expect object is THREE.Mesh
+        console.log('The object is with type of "THREE.Mesh" or "THREE.Points"');
         geometry = object.geometry;
+      }
+
+      // add indices to mesh object if not exist
+      if (computeIndices) {
+        const nVerts = geometry.getAttribute('position').count;
+        const indices = Array.from({ length: nVerts }, (_, k) => k);
+        geometry.setIndex(indices);
       }
 
       // mesh support
@@ -206,36 +201,32 @@ class Viewer {
       self.params.showPoints = !meshSupport;
 
       // add points
-      const sprite = new THREE.TextureLoader().load(
-        "three/textures/sprites/disc.png",
-        () => {
-          const pointsMaterial = new THREE.PointsMaterial({
-            size: 35,
-            sizeAttenuation: true,
-            map: sprite,
-            alphaTest: 0.5,
-            transparent: true,
-          });
-          self.points = new THREE.Points(geometry, pointsMaterial);
-          self.points.name = base + "_points";
+      const sprite = new THREE.TextureLoader().load('three/textures/sprites/disc.png', () => {
+        const pointsMaterial = new THREE.PointsMaterial({
+          size: 35,
+          sizeAttenuation: true,
+          map: sprite,
+          alphaTest: 0.5,
+          transparent: true,
+        });
+        self.points = new THREE.Points(geometry, pointsMaterial);
+        self.points.name = base + '_points';
 
-          try {
-            if (geometry.getAttribute("color").length > 0) {
-              pointsMaterial.vertexColors = true;
-            }
-          } catch (e) {
-            console.warn(e);
-            self.monochrome = true;
+        try {
+          if (geometry.getAttribute('color').count > 0) {
+            pointsMaterial.vertexColors = true;
           }
-
-          self.scene.add(self.points);
-
-          self.onMeshLoaded();
-          self.updateHelpers();
-          self.updateRender();
-          self.render();
+        } catch (e) {
+          console.warn(e);
+          self.monochrome = true;
         }
-      );
+        self.scene.add(self.points);
+
+        self.onMeshLoaded();
+        self.updateHelpers();
+        self.updateRender();
+        self.render();
+      });
 
       // add mesh
       try {
@@ -251,7 +242,7 @@ class Viewer {
         self.mesh = new THREE.Mesh(geometry, material);
         self.mesh.castShadow = true;
         self.mesh.receiveShadow = true;
-        self.mesh.name = base + "_mesh";
+        self.mesh.name = base + '_mesh';
         self.scene.add(self.mesh);
 
         // Wireframe
@@ -262,7 +253,7 @@ class Viewer {
 
         const edges = new WireframeGeometry2(geometry);
         self.wireframe = new Line2(edges, wireMaterial);
-        self.wireframe.name = base + "_wireframe";
+        self.wireframe.name = base + '_wireframe';
         self.scene.add(self.wireframe);
       } catch (e) {
         console.error(e);
@@ -281,7 +272,7 @@ class Viewer {
     this.camera.position.copy(camPos);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.target = camTarget;
-    this.controls.addEventListener("change", () => this.render());
+    this.controls.addEventListener('change', () => this.render());
     this.controls.update();
 
     // GUI setup
@@ -294,65 +285,65 @@ class Viewer {
 
     this.gui = new GUI();
     this.gui
-      .add(this.params, "showPoints")
-      .name("Points")
+      .add(this.params, 'showPoints')
+      .name('Points')
       .onChange(() => this.updateRender());
     this.gui
-      .add(this.params, "pointSize")
+      .add(this.params, 'pointSize')
       .min(0)
       .max(this.params.pointMaxSize)
-      .name("Point size")
+      .name('Point size')
       .onChange(() => this.updateRender());
     this.gui
-      .addColor(this.params, "pointColor")
-      .name("Point color")
+      .addColor(this.params, 'pointColor')
+      .name('Point color')
       .onChange(() => this.updateRender());
     this.gui
-      .add(this.params, "showWireframe")
-      .name("Wireframe")
+      .add(this.params, 'showWireframe')
+      .name('Wireframe')
       .onChange(() => this.updateRender());
     this.gui
-      .add(this.params, "wireframeWidth")
+      .add(this.params, 'wireframeWidth')
       .min(0)
       .max(1.0)
-      .name("Wireframe width")
+      .name('Wireframe width')
       .onChange(() => this.updateRender());
     this.gui
-      .addColor(this.params, "wireframeColor")
-      .name("Wireframe color")
+      .addColor(this.params, 'wireframeColor')
+      .name('Wireframe color')
       .onChange(() => this.updateRender());
     this.gui
-      .add(this.params, "showMesh")
-      .name("Mesh")
+      .add(this.params, 'showMesh')
+      .name('Mesh')
       .onChange(() => this.updateRender());
     this.gui
-      .addColor(this.params, "backgroundColor")
-      .name("Background color")
+      .addColor(this.params, 'backgroundColor')
+      .name('Background color')
       .onChange(() => this.updateRender());
     this.gui
-      .add(this.params, "fogDensity")
+      .add(this.params, 'fogDensity')
       .min(0)
       .max(1)
-      .name("Fog")
+      .name('Fog')
       .onChange(() => this.updateRender());
 
-    let folder = this.gui.addFolder("Grid Helper");
+    let folder = this.gui.addFolder('Grid Helper');
     folder.open();
     folder
-      .add(this.params, "showAxesHelper")
-      .name("show axes helper")
+      .add(this.params, 'showAxesHelper')
+      .name('show axes helper')
       .onChange(() => this.updateHelpers());
     folder
-      .add(this.params, "showGridHelper")
-      .name("show grid helper")
+      .add(this.params, 'showGridHelper')
+      .name('show grid helper')
       .onChange(() => this.updateHelpers());
     folder
-      .add(this.params.gridHelper, "size")
-      .name("size")
+      .add(this.params.gridHelper, 'size')
+      .name('size')
       .onChange(() => this.updateHelpers());
     folder
-      .add(this.params.gridHelper, "unit")
-      .name("unit")
+      .add(this.params.gridHelper, 'unit')
+      .name('unit')
       .onChange(() => this.updateHelpers());
 
     if (this.params.hideControlsOnStart) {

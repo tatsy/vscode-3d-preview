@@ -1,0 +1,12 @@
+{
+    "tabWidth": 2,
+    "trailingComma":"es5",
+    "@typescript-eslint/naming-convention": "warn",
+    "@typescript-eslint/semi": "warn",
+    "curly": "warn",
+    "eqeqeq": "warn",
+    "no-throw-literal": "warn",
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 99
+}

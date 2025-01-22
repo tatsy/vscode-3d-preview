@@ -1,4 +1,5 @@
-import { Loader } from 'three';
+import * as THREE from "three";
+import { Loader } from "three";
 
 class OFFLoader extends Loader {
   load(url, onLoad, onProgress, onError) {
