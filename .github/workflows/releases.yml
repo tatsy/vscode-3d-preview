@@ -33,7 +33,19 @@ jobs:
         id: tag_string
         run: echo "result=${GITHUB_REF#refs/*/v}" >> $GITHUB_OUTPUT
 
-      - name: Create Release
+      - name: Parse version in package.json
+        id: package_version
+        run: echo "result=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+
+      - name: Check if tag matches to package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          if [ "${{ steps.tag_string.outputs.result }}" != "${{ steps.package_version.outputs.result }}" ]; then
+            echo "Tag version does not match package.json version"
+            exit 1
+          fi
+
+      - name: GitHub Releases
         if: startsWith(github.ref, 'refs/tags/v')
         id: create_release
         uses: softprops/action-gh-release@v2
@@ -41,3 +53,7 @@ jobs:
           files: ./vscode-3d-preview-${{ steps.tag_string.outputs.result }}.vsix
           draft: false
           prerelease: false
+
+      - name: Publish to VS Code Marketplace
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: vsce publish -p ${{ secrets.VSCODE_TOKEN }}
