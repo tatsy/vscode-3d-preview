@@ -4,6 +4,7 @@ import { OrbitControls } from './three/controls/OrbitControls.js';
 import { LineMaterial } from './three/lines/LineMaterial.js';
 import { Line2 } from './three/lines/Line2.js';
 import { WireframeGeometry2 } from './three/lines/WireframeGeometry2.js';
+import Stats from './three/libs/stats.module.js';
 import * as BufferGeometryUtils from './three/utils/BufferGeometryUtils.js';
 import * as utils from './utils.js';
 
@@ -39,6 +40,11 @@ class Viewer {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
 
+    // Stats
+    this.stats = new Stats();
+    this.stats.showPanel(0);
+    document.body.appendChild(this.stats.dom);
+
     // Scene
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.FogExp2(this.params.backgroundColor, this.params.fogDensity);
@@ -59,8 +65,12 @@ class Viewer {
     this.setMesh(this.params.fileToLoad);
   }
 
-  render() {
+  mainloop() {
+    this.stats.begin();
+    requestAnimationFrame(this.mainloop.bind(this));
     this.renderer.render(this.scene, this.camera);
+    this.controls.update();
+    this.stats.end();
   }
 
   updateHelpers() {
@@ -113,9 +123,6 @@ class Viewer {
 
       this.scene.add(this.axesHelper);
     }
-
-    // Repaint
-    this.render();
   }
 
   updateRender() {
@@ -148,16 +155,12 @@ class Viewer {
     if (this.params.showWireframe) {
       this.scene.add(this.wireframe);
     }
-
-    // Repaint
-    this.render();
   }
 
   onWindowResize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.render();
   }
 
   setMesh(fileToLoad) {
@@ -225,7 +228,7 @@ class Viewer {
         self.onMeshLoaded();
         self.updateHelpers();
         self.updateRender();
-        self.render();
+        self.mainloop();
       });
 
       // add mesh
@@ -258,8 +261,6 @@ class Viewer {
       } catch (e) {
         console.error(e);
       }
-
-      self.render();
     });
   }
 
@@ -272,7 +273,6 @@ class Viewer {
     this.camera.position.copy(camPos);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.target = camTarget;
-    this.controls.addEventListener('change', () => this.render());
     this.controls.update();
 
     // GUI setup
