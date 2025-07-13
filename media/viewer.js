@@ -31,6 +31,15 @@ class Viewer {
       unit: 1,
     };
 
+    // Initialize customCoordinateSystem if not provided
+    if (!this.params.customCoordinateSystem) {
+      this.params.customCoordinateSystem = {
+        rightAxis: '+x',
+        upAxis: '+y',
+        forwardAxis: '+z',
+      };
+    }
+
     // Three JS instances
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -163,6 +172,167 @@ class Viewer {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
+  getCoordinateSystemPresets() {
+    return {
+      opengl: { rightAxis: '+x', upAxis: '+y', forwardAxis: '+z' },
+      blender: { rightAxis: '+x', upAxis: '+z', forwardAxis: '-y' },
+      unity: { rightAxis: '+x', upAxis: '+y', forwardAxis: '+z' }, // Left-handed in Unity
+      unreal: { rightAxis: '+y', upAxis: '+z', forwardAxis: '+x' },
+      maya: { rightAxis: '+x', upAxis: '+y', forwardAxis: '+z' },
+      '3dsmax': { rightAxis: '+x', upAxis: '+z', forwardAxis: '-y' },
+      opencv: { rightAxis: '+x', upAxis: '-y', forwardAxis: '+z' },
+      colmap: { rightAxis: '+x', upAxis: '-y', forwardAxis: '+z' },
+      nerfstudio: { rightAxis: '+x', upAxis: '+y', forwardAxis: '+z' },
+      custom: this.params.customCoordinateSystem,
+    };
+  }
+
+  getTransformationMatrix(coordinateSystem) {
+    const presets = this.getCoordinateSystemPresets();
+    const system = presets[coordinateSystem] || presets.opengl;
+
+    // Create transformation matrix to convert from input coordinate system to OpenGL
+    const matrix = new THREE.Matrix4();
+
+    // Parse axis definitions
+    const parseAxis = (axis) => {
+      const sign = axis[0] === '+' ? 1 : -1;
+      const component = axis[1];
+      return { sign, component };
+    };
+
+    const right = parseAxis(system.rightAxis);
+    const up = parseAxis(system.upAxis);
+    const forward = parseAxis(system.forwardAxis);
+
+    // Build transformation matrix
+    // Target: OpenGL coordinate system (+X right, +Y up, +Z forward)
+    const elements = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+
+    // Map input axes to OpenGL axes
+    const axisMap = { x: 0, y: 1, z: 2 };
+
+    // Right axis -> X (column 0)
+    elements[axisMap[right.component] * 4 + 0] = right.sign;
+
+    // Up axis -> Y (column 1)
+    elements[axisMap[up.component] * 4 + 1] = up.sign;
+
+    // Forward axis -> Z (column 2)
+    elements[axisMap[forward.component] * 4 + 2] = forward.sign;
+
+    matrix.set(
+      elements[0],
+      elements[1],
+      elements[2],
+      elements[3],
+      elements[4],
+      elements[5],
+      elements[6],
+      elements[7],
+      elements[8],
+      elements[9],
+      elements[10],
+      elements[11],
+      elements[12],
+      elements[13],
+      elements[14],
+      elements[15]
+    );
+
+    return matrix;
+  }
+
+  applyCoordinateConvention(geometry) {
+    const coordinateSystem = this.params.coordinateSystem || 'opengl';
+
+    if (coordinateSystem === 'opengl') {
+      return; // No transformation needed for OpenGL (Three.js default)
+    }
+
+    const transformMatrix = this.getTransformationMatrix(coordinateSystem);
+
+    // Apply transformation to positions
+    const positions = geometry.getAttribute('position');
+    if (positions) {
+      const positionArray = positions.array;
+      const vertex = new THREE.Vector3();
+
+      for (let i = 0; i < positionArray.length; i += 3) {
+        vertex.set(positionArray[i], positionArray[i + 1], positionArray[i + 2]);
+        vertex.applyMatrix4(transformMatrix);
+        positionArray[i] = vertex.x;
+        positionArray[i + 1] = vertex.y;
+        positionArray[i + 2] = vertex.z;
+      }
+      positions.needsUpdate = true;
+    }
+
+    // Apply transformation to normals
+    const normals = geometry.getAttribute('normal');
+    if (normals) {
+      const normalArray = normals.array;
+      const normal = new THREE.Vector3();
+      const normalMatrix = new THREE.Matrix3().getNormalMatrix(transformMatrix);
+
+      for (let i = 0; i < normalArray.length; i += 3) {
+        normal.set(normalArray[i], normalArray[i + 1], normalArray[i + 2]);
+        normal.applyMatrix3(normalMatrix);
+        normalArray[i] = normal.x;
+        normalArray[i + 1] = normal.y;
+        normalArray[i + 2] = normal.z;
+      }
+      normals.needsUpdate = true;
+    }
+  }
+
+  showCustomCoordinateControls() {
+    if (!this.customCoordControls.folder) {
+      this.customCoordControls.folder = this.gui.addFolder('Custom Axes');
+      this.customCoordControls.folder.open();
+
+      const axisOptions = ['+x', '-x', '+y', '-y', '+z', '-z'];
+
+      this.customCoordControls.rightAxis = this.customCoordControls.folder
+        .add(this.params.customCoordinateSystem, 'rightAxis', axisOptions)
+        .name('Right Axis')
+        .onChange(() => this.reloadMesh());
+
+      this.customCoordControls.upAxis = this.customCoordControls.folder
+        .add(this.params.customCoordinateSystem, 'upAxis', axisOptions)
+        .name('Up Axis')
+        .onChange(() => this.reloadMesh());
+
+      this.customCoordControls.forwardAxis = this.customCoordControls.folder
+        .add(this.params.customCoordinateSystem, 'forwardAxis', axisOptions)
+        .name('Forward Axis')
+        .onChange(() => this.reloadMesh());
+    }
+  }
+
+  hideCustomCoordinateControls() {
+    if (this.customCoordControls.folder) {
+      this.customCoordControls.folder.destroy();
+      this.customCoordControls = {};
+    }
+  }
+
+  reloadMesh() {
+    // Clear existing mesh objects
+    if (this.points) {
+      this.scene.remove(this.points);
+    }
+    if (this.mesh) {
+      this.scene.remove(this.mesh);
+    }
+    if (this.wireframe) {
+      this.scene.remove(this.wireframe);
+    }
+
+    // Reload with new coordinate convention
+    this.setMesh(this.params.fileToLoad);
+  }
+
   setMesh(fileToLoad) {
     const self = this;
     const base = utils.basename(fileToLoad);
@@ -197,6 +367,9 @@ class Viewer {
         const indices = Array.from({ length: nVerts }, (_, k) => k);
         geometry.setIndex(indices);
       }
+
+      // Apply coordinate convention transform
+      self.applyCoordinateConvention(geometry);
 
       // mesh support
       const meshSupport = geometry.index !== null;
@@ -326,6 +499,40 @@ class Viewer {
       .max(1)
       .name('Fog')
       .onChange(() => this.updateRender());
+    // Coordinate System controls
+    let coordFolder = this.gui.addFolder('Coordinate System');
+    coordFolder.open();
+
+    const coordinateSystemOptions = [
+      'opengl',
+      'blender',
+      'unity',
+      'unreal',
+      'maya',
+      '3dsmax',
+      'opencv',
+      'colmap',
+      'nerfstudio',
+      'custom',
+    ];
+
+    coordFolder
+      .add(this.params, 'coordinateSystem', coordinateSystemOptions)
+      .name('Preset')
+      .onChange(() => {
+        if (this.params.coordinateSystem === 'custom') {
+          this.showCustomCoordinateControls();
+        } else {
+          this.hideCustomCoordinateControls();
+        }
+        this.reloadMesh();
+      });
+
+    // Custom coordinate system controls (initially hidden)
+    this.customCoordControls = {};
+    if (this.params.coordinateSystem === 'custom') {
+      this.showCustomCoordinateControls();
+    }
 
     let folder = this.gui.addFolder('Grid Helper');
     folder.open();
@@ -353,3 +560,13 @@ class Viewer {
 }
 
 const viewer = new Viewer();
+
+// Handle messages from VS Code
+window.addEventListener('message', (event) => {
+  const message = event.data;
+  switch (message.type) {
+    case 'modelRefresh':
+      viewer.reloadMesh();
+      break;
+  }
+});

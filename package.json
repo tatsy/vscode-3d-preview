@@ -129,6 +129,75 @@
           "type": "number",
           "default": 0,
           "description": "Fog density."
+        },
+        "3dpreview.coordinateSystem": {
+          "type": "string",
+          "default": "opengl",
+          "enum": [
+            "opengl",
+            "blender",
+            "unity",
+            "unreal",
+            "maya",
+            "3dsmax",
+            "opencv",
+            "colmap",
+            "nerfstudio",
+            "custom"
+          ],
+          "description": "Coordinate system preset for different platforms."
+        },
+        "3dpreview.customCoordinateSystem": {
+          "type": "object",
+          "default": {
+            "rightAxis": "+x",
+            "upAxis": "+y",
+            "forwardAxis": "+z"
+          },
+          "properties": {
+            "rightAxis": {
+              "type": "string",
+              "enum": [
+                "+x",
+                "-x",
+                "+y",
+                "-y",
+                "+z",
+                "-z"
+              ],
+              "description": "Axis pointing to the right"
+            },
+            "upAxis": {
+              "type": "string",
+              "enum": [
+                "+x",
+                "-x",
+                "+y",
+                "-y",
+                "+z",
+                "-z"
+              ],
+              "description": "Axis pointing up"
+            },
+            "forwardAxis": {
+              "type": "string",
+              "enum": [
+                "+x",
+                "-x",
+                "+y",
+                "-y",
+                "+z",
+                "-z"
+              ],
+              "description": "Axis pointing forward"
+            }
+          },
+          "description": "Custom coordinate system configuration (used when coordinateSystem is set to 'custom')."
+        },
+        "3dpreview.hotReload": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable hot reload when 3D files are modified."
         }
       }
     }
@@ -155,5 +224,8 @@
     "typescript": "^5.7.3",
     "vsce": "^2.15.0",
     "vscode-test": "^1.6.1"
+  },
+  "dependencies": {
+    "three": "^0.178.0"
   }
 }

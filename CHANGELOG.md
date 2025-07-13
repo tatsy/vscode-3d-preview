@@ -4,7 +4,26 @@ All notable changes to the "vscode-3dpreview" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## v0.2.2
+## [Unreleased]
+### Added
+- Added comprehensive coordinate system support (`coordinateSystem`) with presets for major 3D platforms:
+  - OpenGL (default), Blender, Unity, Unreal, Maya, 3ds Max, OpenCV, COLMAP, NeRFStudio
+- Added custom coordinate system configuration (`customCoordinateSystem`) for user-defined axis mappings
+- Added GUI controls for coordinate system presets and custom axis configuration
+- Added automatic coordinate transformation with proper normal vector handling
+- Added hot reload support for coordinate system changes
+
+### Changed
+- Replaced simple coordinate convention with full coordinate system transformation
+- Default coordinate system is OpenGL (maintains backward compatibility)
+- Enhanced GUI with coordinate system folder and custom axes subfolder
+- Improved coordinate system handling with matrix transformations
+
+### Fixed
+- Improved coordinate system handling for 3D models with proper transformation matrices
+- Fixed normal vector transformations for coordinate system changes
+
+## [0.2.4] - Previous Release
 
 - Default point size support ([#7](https://github.com/tatsy/vscode-3d-preview/issues/7))
 - Revise JS codes to follow ES6.

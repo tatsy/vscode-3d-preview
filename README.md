@@ -36,6 +36,50 @@ This extension supports 3D formats equally as [Open3D](http://www.open3d.org/doc
 
 ![color_points](images/color_points.jpg)
 
+## Configuration
+
+The extension provides several configuration options that can be set in VS Code settings:
+
+### Coordinate System
+
+- **Setting**: `3dpreview.coordinateSystem`
+- **Default**: `"opengl"`
+- **Options**: Platform presets and custom configuration
+
+This setting allows you to switch between different coordinate systems used by various 3D platforms:
+
+#### Platform Presets
+
+- **OpenGL** (default): +X right, +Y up, +Z forward
+- **Blender**: +X right, +Z up, -Y forward  
+- **Unity**: +X right, +Y up, +Z forward (left-handed)
+- **Unreal**: +Y right, +Z up, +X forward
+- **Maya**: +X right, +Y up, +Z forward
+- **3ds Max**: +X right, +Z up, -Y forward
+- **OpenCV**: +X right, -Y up, +Z forward
+- **COLMAP**: +X right, -Y up, +Z forward
+- **NeRFStudio**: +X right, +Y up, +Z forward
+- **Custom**: User-defined axis configuration
+
+#### Custom Coordinate System
+
+When set to "custom", you can configure individual axes:
+
+- **Setting**: `3dpreview.customCoordinateSystem`
+- **Properties**:
+  - `rightAxis`: Which axis points right (`+x`, `-x`, `+y`, `-y`, `+z`, `-z`)
+  - `upAxis`: Which axis points up 
+  - `forwardAxis`: Which axis points forward
+
+#### Usage
+
+You can change the coordinate system:
+1. Through VS Code settings (search for "3dpreview.coordinateSystem")
+2. Using the "Coordinate System" folder in the 3D viewer's control panel
+3. For custom systems, adjust individual axes in the "Custom Axes" subfolder
+
+This feature is particularly useful when working with 3D models from different software packages that use different coordinate system conventions.
+
 ## FAQ
 
 - Q. When I drag and drop a mesh file, a blank display is shown.
