@@ -129,6 +129,19 @@
           "type": "number",
           "default": 0,
           "description": "Fog density."
+        },
+        "3dpreview.cameraControls": {
+          "type": "string",
+          "default": "trackball",
+          "enum": [
+            "trackball",
+            "orbit"
+          ],
+          "enumDescriptions": [
+            "Free rotation in any direction (TrackballControls).",
+            "Rotation keeps the camera upright and cannot pass over the poles (OrbitControls)."
+          ],
+          "description": "Camera control scheme used in the viewer."
         }
       }
     }

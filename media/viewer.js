@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GUI } from './three/libs/lil-gui.module.min.js';
 import { OrbitControls } from './three/controls/OrbitControls.js';
+import { TrackballControls } from './three/controls/TrackballControls.js';
 import { LineMaterial } from './three/lines/LineMaterial.js';
 import { Line2 } from './three/lines/Line2.js';
 import { WireframeGeometry2 } from './three/lines/WireframeGeometry2.js';
@@ -161,6 +162,32 @@ class Viewer {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    if (this.controls && typeof this.controls.handleResize === 'function') {
+      this.controls.handleResize();
+    }
+  }
+
+  setupControls() {
+    const target =
+      this.controls !== undefined ? this.controls.target.clone() : utils.getBBoxCenter(this.points.geometry);
+
+    if (this.controls !== undefined) {
+      this.controls.dispose();
+    }
+
+    if (this.params.cameraControls === 'orbit') {
+      // OrbitControls keeps the camera upright and clamps the polar angle,
+      // so the model cannot be rotated over the poles.
+      this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    } else {
+      // TrackballControls allows free rotation in any direction.
+      this.controls = new TrackballControls(this.camera, this.renderer.domElement);
+      this.controls.rotateSpeed = 2.0;
+      this.controls.zoomSpeed = 1.2;
+      this.controls.panSpeed = 0.8;
+    }
+    this.controls.target.copy(target);
+    this.controls.update();
   }
 
   setMesh(fileToLoad) {
@@ -271,9 +298,9 @@ class Viewer {
     const camPos = utils.autoCameraPos(this.points.geometry);
 
     this.camera.position.copy(camPos);
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.target = camTarget;
-    this.controls.update();
+    this.camera.lookAt(camTarget);
+    this.setupControls();
+    window.addEventListener('resize', () => this.onWindowResize());
 
     // GUI setup
     const extent = utils.getBBoxMaxExtent(this.points.geometry);
@@ -326,6 +353,10 @@ class Viewer {
       .max(1)
       .name('Fog')
       .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, 'cameraControls', { Trackball: 'trackball', Orbit: 'orbit' })
+      .name('Camera controls')
+      .onChange(() => this.setupControls());
 
     let folder = this.gui.addFolder('Grid Helper');
     folder.open();

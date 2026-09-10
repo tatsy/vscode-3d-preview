@@ -4,6 +4,10 @@ All notable changes to the "vscode-3dpreview" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## Unreleased
+
+- Restore free rotation with `TrackballControls` and add the `3dpreview.cameraControls` setting to switch between trackball and orbit controls ([#12](https://github.com/tatsy/vscode-3d-preview/issues/12)).
+
 ## v0.2.2
 
 - Default point size support ([#7](https://github.com/tatsy/vscode-3d-preview/issues/7))
