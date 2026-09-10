@@ -116,6 +116,7 @@ export class MeshViewProvider
       pointMaxSize: config.get("pointMaxSize", 1.0),
       pointSize: config.get("pointSize", 0.01),
       showPoints: config.get("showPoints", false),
+      pointSizeAttenuation: config.get("pointSizeAttenuation", true),
       showWireframe: config.get("showWireframe", false),
       wireframeWidth: config.get("wireframeWidth", 0.01),
       showMesh: config.get("showMesh", true),

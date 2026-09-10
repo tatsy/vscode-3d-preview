@@ -9,6 +9,10 @@ import Stats from './three/libs/stats.module.js';
 import * as BufferGeometryUtils from './three/utils/BufferGeometryUtils.js';
 import * as utils from './utils.js';
 
+// Largest on-screen point size (in pixels) when size attenuation is disabled.
+// The point size slider is mapped onto [0, MAX_POINT_PIXEL_SIZE] in that mode.
+const MAX_POINT_PIXEL_SIZE = 30;
+
 class Viewer {
   controls;
   points;
@@ -132,10 +136,21 @@ class Viewer {
     this.scene.background = new THREE.Color(this.params.backgroundColor);
 
     // Points
-    if (this.params.showPoints) {
+    if (this.points.material.sizeAttenuation !== this.params.pointSizeAttenuation) {
+      // sizeAttenuation is a shader define, so the material must be recompiled.
+      this.points.material.sizeAttenuation = this.params.pointSizeAttenuation;
+      this.points.material.needsUpdate = true;
+    }
+
+    if (!this.params.showPoints) {
+      this.points.material.size = 0;
+    } else if (this.params.pointSizeAttenuation) {
+      // World-space size: points shrink with distance.
       this.points.material.size = this.params.pointSize;
     } else {
-      this.points.material.size = 0;
+      // Screen-space size: points stay visible at any distance.
+      this.points.material.size =
+        (this.params.pointSize / this.params.pointMaxSize) * MAX_POINT_PIXEL_SIZE;
     }
 
     if (this.monochrome) {
@@ -324,6 +339,10 @@ class Viewer {
     this.gui
       .addColor(this.params, 'pointColor')
       .name('Point color')
+      .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, 'pointSizeAttenuation')
+      .name('Point size attenuation')
       .onChange(() => this.updateRender());
     this.gui
       .add(this.params, 'showWireframe')

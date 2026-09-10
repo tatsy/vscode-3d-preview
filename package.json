@@ -115,6 +115,11 @@
           "default": 0.5,
           "description": "Default point size."
         },
+        "3dpreview.pointSizeAttenuation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Shrink points with distance from the camera. Disable to keep every point visible at a fixed on-screen size."
+        },
         "3dpreview.wireframeColor": {
           "type": "string",
           "default": "#0000ff",
