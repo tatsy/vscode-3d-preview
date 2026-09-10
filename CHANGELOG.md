@@ -8,6 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Restore free rotation with `TrackballControls` and add the `3dpreview.cameraControls` setting to switch between trackball and orbit controls ([#12](https://github.com/tatsy/vscode-3d-preview/issues/12)).
 - Add the `3dpreview.pointSizeAttenuation` setting and GUI toggle to keep points at a fixed on-screen size ([#4](https://github.com/tatsy/vscode-3d-preview/issues/4)).
+- Add a directional light that follows the camera, with the `3dpreview.lightIntensity` setting and GUI slider ([#13](https://github.com/tatsy/vscode-3d-preview/issues/13)).
 
 ## v0.2.2
 

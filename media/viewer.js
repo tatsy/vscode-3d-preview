@@ -66,6 +66,15 @@ class Viewer {
       5000.0
     );
 
+    // Key light attached to the camera, so that it follows the view direction and
+    // vertical surfaces stay shaded no matter how the model is rotated.
+    // Position is camera-local: slightly above and to the right of the viewpoint.
+    this.cameraLight = new THREE.DirectionalLight(0xffffff, this.params.lightIntensity);
+    this.cameraLight.position.set(0.5, 1.0, 1.0);
+    this.camera.add(this.cameraLight);
+    this.camera.add(this.cameraLight.target); // target at the camera origin
+    this.scene.add(this.camera);
+
     // check extension
     this.setMesh(this.params.fileToLoad);
   }
@@ -134,6 +143,9 @@ class Viewer {
     // Fog
     this.scene.fog = new THREE.FogExp2(this.params.backgroundColor, this.params.fogDensity);
     this.scene.background = new THREE.Color(this.params.backgroundColor);
+
+    // Light
+    this.cameraLight.intensity = this.params.lightIntensity;
 
     // Points
     if (this.points.material.sizeAttenuation !== this.params.pointSizeAttenuation) {
@@ -371,6 +383,12 @@ class Viewer {
       .min(0)
       .max(1)
       .name('Fog')
+      .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, 'lightIntensity')
+      .min(0)
+      .max(5)
+      .name('Light intensity')
       .onChange(() => this.updateRender());
     this.gui
       .add(this.params, 'cameraControls', { Trackball: 'trackball', Orbit: 'orbit' })

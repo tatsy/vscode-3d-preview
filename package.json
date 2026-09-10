@@ -135,6 +135,12 @@
           "default": 0,
           "description": "Fog density."
         },
+        "3dpreview.lightIntensity": {
+          "type": "number",
+          "default": 1.0,
+          "minimum": 0,
+          "description": "Intensity of the directional light that follows the camera. Set 0 to disable it."
+        },
         "3dpreview.cameraControls": {
           "type": "string",
           "default": "trackball",
