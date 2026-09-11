@@ -170,6 +170,8 @@ class Viewer {
     }
 
     // Mesh
+    this.mesh.material.flatShading = this.params.flatShading;
+
     this.scene.remove(this.mesh);
     if (this.params.showMesh) {
       this.scene.add(this.mesh);
@@ -295,7 +297,7 @@ class Viewer {
         var material = new THREE.MeshStandardMaterial({
           color: 0xefefef,
           roughness: 0.25,
-          flatShading: true,
+          flatShading: self.params.flatShading,
           side: THREE.DoubleSide,
         });
         self.mesh = new THREE.Mesh(geometry, material);
@@ -375,6 +377,10 @@ class Viewer {
     this.gui
       .add(this.params, 'showMesh')
       .name('Mesh')
+      .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, 'flatShading')
+      .name('Flat shading')
       .onChange(() => this.updateRender());
     this.gui
       .addColor(this.params, 'backgroundColor')

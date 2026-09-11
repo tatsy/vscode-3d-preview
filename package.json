@@ -130,6 +130,11 @@
           "default": 0.5,
           "description": "Default wireframe width."
         },
+        "3dpreview.flatShading": {
+          "type": "boolean",
+          "default": false,
+          "description": "Flat shading for mesh triangles."
+        },
         "3dpreview.fogDensity": {
           "type": "number",
           "default": 0,
