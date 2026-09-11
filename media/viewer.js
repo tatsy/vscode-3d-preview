@@ -13,6 +13,17 @@ import * as utils from './utils.js';
 // The point size slider is mapped onto [0, MAX_POINT_PIXEL_SIZE] in that mode.
 const MAX_POINT_PIXEL_SIZE = 30;
 
+// Rotation that brings the file's up axis to three.js' +Y. Each entry is a pure
+// rotation, so handedness is preserved and no mirroring is introduced.
+const UP_AXIS_ROTATIONS = {
+  '+X': new THREE.Euler(0, 0, Math.PI / 2),
+  '-X': new THREE.Euler(0, 0, -Math.PI / 2),
+  '+Y': new THREE.Euler(0, 0, 0),
+  '-Y': new THREE.Euler(Math.PI, 0, 0),
+  '+Z': new THREE.Euler(-Math.PI / 2, 0, 0),
+  '-Z': new THREE.Euler(Math.PI / 2, 0, 0),
+};
+
 class Viewer {
   controls;
   points;
@@ -58,6 +69,13 @@ class Viewer {
     const light = new THREE.HemisphereLight(0x888888, 0x333333, 1.0);
     this.scene.add(light);
 
+    // All loaded objects (points, mesh, wireframe) live in this group, so that the
+    // file's coordinate system can be re-oriented by rotating the group alone.
+    // Camera and grid helper stay in world space.
+    this.model = new THREE.Group();
+    this.model.name = 'model';
+    this.scene.add(this.model);
+
     // Camera
     this.camera = new THREE.PerspectiveCamera(
       45.0,
@@ -87,6 +105,29 @@ class Viewer {
     this.stats.end();
   }
 
+  // Bounding box of the loaded data in the file's own coordinate system.
+  localBBox() {
+    this.points.geometry.computeBoundingBox();
+    return this.points.geometry.boundingBox;
+  }
+
+  // Bounding box of the loaded data in world space, i.e. after the up-axis rotation.
+  worldBBox() {
+    this.model.updateMatrixWorld(true);
+    return new THREE.Box3().setFromObject(this.points);
+  }
+
+  // Rotate the model group so that the file's up axis points to +Y. The rotation is
+  // taken about the model's bounding-box centre, so the model stays where it is and
+  // only its orientation changes. The camera is intentionally left untouched.
+  applyUpAxis() {
+    const rotation = UP_AXIS_ROTATIONS[this.params.upAxis] || UP_AXIS_ROTATIONS['+Y'];
+    const center = utils.getBBoxCenter(this.localBBox());
+    this.model.rotation.copy(rotation);
+    this.model.position.copy(center).sub(center.clone().applyEuler(rotation));
+    this.model.updateMatrixWorld(true);
+  }
+
   updateHelpers() {
     // Remove current helpers
     if (this.gridHelper !== null) {
@@ -94,15 +135,16 @@ class Viewer {
     }
 
     if (this.axesHelper !== null) {
-      this.scene.remove(this.axesHelper);
+      this.model.remove(this.axesHelper);
     }
 
-    // BBox center
-    const center = utils.getBBoxCenter(this.points.geometry);
-    const extent = utils.getBBoxMaxExtent(this.points.geometry);
-
-    // Grid helper
+    // Grid helper: lives in world space so that it always reads as the floor,
+    // whatever up axis the file uses.
     if (this.params.showGridHelper) {
+      const worldBox = this.worldBBox();
+      const center = utils.getBBoxCenter(worldBox);
+      const extent = utils.getBBoxMaxExtent(worldBox);
+
       const size = this.params.gridHelper.size;
       const unit = this.params.gridHelper.unit;
       const divisions = size / unit;
@@ -114,28 +156,37 @@ class Viewer {
         const colorCenterLine = new THREE.Color('#888888');
         const colorGrid = new THREE.Color('#888888');
         this.gridHelper = new THREE.GridHelper(size, divisions, colorCenterLine, colorGrid);
-        this.gridHelper.position.x += center.x - extent * 0.5;
-        this.gridHelper.position.y += center.y - extent * 0.5;
-        this.gridHelper.position.z += center.z - extent * 0.5;
         this.gridHelper.material.linewidth = 10;
         this.gridHelper.name = 'gridHelper';
       }
+      this.gridHelper.position.set(
+        center.x - extent * 0.5,
+        center.y - extent * 0.5,
+        center.z - extent * 0.5
+      );
 
       this.scene.add(this.gridHelper);
     }
 
-    // Axis helper
+    // Axes helper: child of the model group, so it shows the axes of the file's
+    // own coordinate system and follows the up-axis rotation.
     if (this.params.showAxesHelper) {
+      const localBox = this.localBBox();
+      const center = utils.getBBoxCenter(localBox);
+      const extent = utils.getBBoxMaxExtent(localBox);
+
       if (this.axesHelper === null) {
         this.axesHelper = new THREE.AxesHelper(extent);
-        this.axesHelper.position.x += center.x - extent * 0.5;
-        this.axesHelper.position.y += center.y - extent * 0.5;
-        this.axesHelper.position.z += center.z - extent * 0.5;
         this.axesHelper.material.linewidth = 10;
         this.axesHelper.name = 'axesHelper';
       }
+      this.axesHelper.position.set(
+        center.x - extent * 0.5,
+        center.y - extent * 0.5,
+        center.z - extent * 0.5
+      );
 
-      this.scene.add(this.axesHelper);
+      this.model.add(this.axesHelper);
     }
   }
 
@@ -177,9 +228,9 @@ class Viewer {
         this.mesh.material.needsUpdate = true;
       }
 
-      this.scene.remove(this.mesh);
+      this.model.remove(this.mesh);
       if (this.params.showMesh) {
-        this.scene.add(this.mesh);
+        this.model.add(this.mesh);
       }
     }
 
@@ -188,9 +239,9 @@ class Viewer {
       this.wireframe.material.color = new THREE.Color(this.params.wireframeColor);
       this.wireframe.material.linewidth = this.params.wireframeWidth;
 
-      this.scene.remove(this.wireframe);
+      this.model.remove(this.wireframe);
       if (this.params.showWireframe) {
-        this.scene.add(this.wireframe);
+        this.model.add(this.wireframe);
       }
     }
   }
@@ -208,7 +259,7 @@ class Viewer {
     const target =
       this.controls !== undefined
         ? this.controls.target.clone()
-        : utils.getBBoxCenter(this.points.geometry);
+        : utils.getBBoxCenter(this.worldBBox());
 
     if (this.controls !== undefined) {
       this.controls.dispose();
@@ -298,7 +349,7 @@ class Viewer {
           console.warn(e);
           self.monochrome = true;
         }
-        self.scene.add(self.points);
+        self.model.add(self.points);
 
         self.onMeshLoaded();
         self.updateHelpers();
@@ -321,7 +372,7 @@ class Viewer {
         self.mesh.castShadow = true;
         self.mesh.receiveShadow = true;
         self.mesh.name = base + '_mesh';
-        self.scene.add(self.mesh);
+        self.model.add(self.mesh);
 
         // Wireframe
         const wireMaterial = new LineMaterial({
@@ -332,7 +383,7 @@ class Viewer {
         const edges = new WireframeGeometry2(geometry);
         self.wireframe = new Line2(edges, wireMaterial);
         self.wireframe.name = base + '_wireframe';
-        self.scene.add(self.wireframe);
+        self.model.add(self.wireframe);
       } catch (e) {
         console.error(e);
       }
@@ -340,10 +391,13 @@ class Viewer {
   }
 
   onMeshLoaded() {
+    // Orient the model according to the configured up axis before placing the camera
+    this.applyUpAxis();
+    const worldBox = this.worldBBox();
+
     // Camera setup
-    this.points.geometry.computeBoundingBox();
-    const camTarget = utils.getBBoxCenter(this.points.geometry);
-    const camPos = utils.autoCameraPos(this.points.geometry);
+    const camTarget = utils.getBBoxCenter(worldBox);
+    const camPos = utils.autoCameraPos(worldBox);
 
     this.camera.position.copy(camPos);
     this.camera.lookAt(camTarget);
@@ -351,7 +405,7 @@ class Viewer {
     window.addEventListener('resize', () => this.onWindowResize());
 
     // GUI setup
-    const extent = utils.getBBoxMaxExtent(this.points.geometry);
+    const extent = utils.getBBoxMaxExtent(worldBox);
     this.params.pointSize = extent / 100.0;
     this.params.pointMaxSize = extent / 10.0;
 
@@ -419,6 +473,13 @@ class Viewer {
       .add(this.params, 'cameraControls', { Trackball: 'trackball', Orbit: 'orbit' })
       .name('Camera controls')
       .onChange(() => this.setupControls());
+    this.gui
+      .add(this.params, 'upAxis', Object.keys(UP_AXIS_ROTATIONS))
+      .name('Up axis')
+      .onChange(() => {
+        this.applyUpAxis();
+        this.updateHelpers();
+      });
 
     let folder = this.gui.addFolder('Grid Helper');
     folder.open();
