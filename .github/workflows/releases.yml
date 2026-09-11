@@ -52,7 +52,7 @@ jobs:
 
       - name: GitHub Releases
         if: startsWith(github.ref, 'refs/tags/v') && steps.tag_version.outputs.result == steps.package_version.outputs.result
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ./vscode-3d-preview-${{ steps.tag_version.outputs.result }}.vsix
           draft: false

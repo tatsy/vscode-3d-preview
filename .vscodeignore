@@ -3,6 +3,11 @@
 out/test/**
 data/**
 
+.github/workflows
+eslint.config.mjs
+.node-version
+.npmrc
+
 src/**
 .gitignore
 .yarnrc
