@@ -170,20 +170,25 @@ class Viewer {
     }
 
     // Mesh
-    this.mesh.material.flatShading = this.params.flatShading;
+    if (this.mesh && this.mesh.flatShading != this.params.flatShading) {
+      this.mesh.material.flatShading = this.params.flatShading;
+      this.mesh.needsUpdate = true;
 
-    this.scene.remove(this.mesh);
-    if (this.params.showMesh) {
-      this.scene.add(this.mesh);
+      this.scene.remove(this.mesh);
+      if (this.params.showMesh) {
+        this.scene.add(this.mesh);
+      }
     }
 
     // Wireframe
-    this.wireframe.material.color = new THREE.Color(this.params.wireframeColor);
-    this.wireframe.material.linewidth = this.params.wireframeWidth;
+    if (this.wireframe) {
+      this.wireframe.material.color = new THREE.Color(this.params.wireframeColor);
+      this.wireframe.material.linewidth = this.params.wireframeWidth;
 
-    this.scene.remove(this.wireframe);
-    if (this.params.showWireframe) {
-      this.scene.add(this.wireframe);
+      this.scene.remove(this.wireframe);
+      if (this.params.showWireframe) {
+        this.scene.add(this.wireframe);
+      }
     }
   }
 

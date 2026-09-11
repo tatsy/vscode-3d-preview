@@ -47,7 +47,7 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
     const listeners: vscode.Disposable[] = [];
 
     listeners.push(
-      document.onDidChangeDocument((_) => {
+      document.onDidChangeDocument(() => {
         for (const webviewPanel of this.webviews.get(document.uri)) {
           this.postMessage(webviewPanel, { type: 'update' });
         }
@@ -73,7 +73,17 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
     };
     webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, document);
 
-    webviewPanel.webview.onDidReceiveMessage((e) => this.onMessage(document, e));
+    webviewPanel.webview.onDidReceiveMessage((e) => {
+      switch (e.type) {
+        case 'ready':
+          this.postMessage(webviewPanel, { type: 'init' });
+          return;
+
+        default:
+          this.onMessage(document, e);
+          return;
+      }
+    });
 
     if (
       document.uri.scheme == 'file' &&
@@ -89,12 +99,6 @@ export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<Mes
       watcher.onDidChange(() => this.postMessage(webviewPanel, { type: 'modelRefresh' }));
       webviewPanel.onDidDispose(() => watcher.dispose());
     }
-
-    webviewPanel.webview.onDidReceiveMessage((e) => {
-      if (e.type === 'ready') {
-        this.postMessage(webviewPanel, { type: 'init' });
-      }
-    });
   }
 
   private getMediaWebviewUri(webview: vscode.Webview, filePath: string): vscode.Uri {
