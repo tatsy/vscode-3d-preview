@@ -170,9 +170,11 @@ class Viewer {
     }
 
     // Mesh
-    if (this.mesh && this.mesh.flatShading != this.params.flatShading) {
-      this.mesh.material.flatShading = this.params.flatShading;
-      this.mesh.needsUpdate = true;
+    if (this.mesh) {
+      if (this.mesh.material.flatShading != this.params.flatShading) {
+        this.mesh.material.flatShading = this.params.flatShading;
+        this.mesh.needsUpdate = true;
+      }
 
       this.scene.remove(this.mesh);
       if (this.params.showMesh) {
@@ -245,9 +247,18 @@ class Viewer {
         // merge geometries
         console.log('The object is with type of "THREE.Group"');
         geometry = BufferGeometryUtils.mergeGeometries(
-          object.children.map((child) => child.geometry.clone().applyMatrix4(child.matrix))
+          object.children.map((child) => {
+            const g = child.geometry.clone().applyMatrix4(child.matrix);
+            g.deleteAttribute('normal');
+            g.deleteAttribute('uv');
+            return g;
+          })
         );
-        computeIndices = !object.children[0].isPoints;
+
+        if (!object.children[0].isPoints) {
+          const tolerance = utils.getBBoxMaxExtent(geometry) * 1e-6;
+          geometry = BufferGeometryUtils.mergeVertices(geometry, tolerance);
+        }
       } else {
         // expect object is THREE.Mesh
         console.log('The object is with type of "THREE.Mesh" or "THREE.Points"');
