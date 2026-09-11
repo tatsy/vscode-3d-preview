@@ -171,9 +171,10 @@ class Viewer {
 
     // Mesh
     if (this.mesh) {
-      if (this.mesh.material.flatShading != this.params.flatShading) {
+      if (this.mesh.material.flatShading !== this.params.flatShading) {
+        // flatShading is a shader define, so the material must be recompiled.
         this.mesh.material.flatShading = this.params.flatShading;
-        this.mesh.needsUpdate = true;
+        this.mesh.material.needsUpdate = true;
       }
 
       this.scene.remove(this.mesh);
