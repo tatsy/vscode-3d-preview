@@ -196,7 +196,9 @@ class Viewer {
 
   setupControls() {
     const target =
-      this.controls !== undefined ? this.controls.target.clone() : utils.getBBoxCenter(this.points.geometry);
+      this.controls !== undefined
+        ? this.controls.target.clone()
+        : utils.getBBoxCenter(this.points.geometry);
 
     if (this.controls !== undefined) {
       this.controls.dispose();
@@ -292,7 +294,7 @@ class Viewer {
         // Mesh
         var material = new THREE.MeshStandardMaterial({
           color: 0xefefef,
-          roughness: 0.1,
+          roughness: 0.25,
           flatShading: true,
           side: THREE.DoubleSide,
         });

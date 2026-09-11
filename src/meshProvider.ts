@@ -1,14 +1,20 @@
-import * as vscode from "vscode";
-import * as path from "path";
-import { MeshDocument } from "./meshDocument";
-import { disposeAll, getNonce } from "./utils";
+import * as vscode from 'vscode';
+import * as path from 'path';
+import { MeshDocument } from './meshDocument';
+import { disposeAll, getNonce } from './utils';
+
+// Extension --> Webview
+type ToWebviewMessage = { type: 'init' } | { type: 'update' } | { type: 'modelRefresh' };
+
+// Webview --> Extension
+type FromWebviewMessage =
+  | { type: 'ready' }
+  | { type: 'response'; requestId: number; body: unknown };
 
 /**
  * provider for mesh viewers.
  */
-export class MeshViewProvider
-  implements vscode.CustomReadonlyEditorProvider<MeshDocument>
-{
+export class MeshViewProvider implements vscode.CustomReadonlyEditorProvider<MeshDocument> {
   // register to subscriptions
   public static register(context: vscode.ExtensionContext): vscode.Disposable {
     const register = vscode.window.registerCustomEditorProvider(
@@ -25,7 +31,7 @@ export class MeshViewProvider
   }
 
   // view type name
-  private static readonly viewType = "3dpreview.viewer";
+  private static readonly viewType = '3dpreview.viewer';
 
   // tracks all known webviews
   private readonly webviews = new WebviewCollection();
@@ -34,16 +40,16 @@ export class MeshViewProvider
 
   async openCustomDocument(
     uri: vscode.Uri,
-    openContext: vscode.CustomDocumentOpenContext,
-    token: vscode.CancellationToken
+    _openContext: vscode.CustomDocumentOpenContext,
+    _token: vscode.CancellationToken
   ): Promise<MeshDocument> {
     const document = new MeshDocument(uri);
     const listeners: vscode.Disposable[] = [];
 
     listeners.push(
-      document.onDidChangeDocument((e) => {
+      document.onDidChangeDocument((_) => {
         for (const webviewPanel of this.webviews.get(document.uri)) {
-          this.postMessage(webviewPanel, "update", {});
+          this.postMessage(webviewPanel, { type: 'update' });
         }
       })
     );
@@ -56,7 +62,7 @@ export class MeshViewProvider
   async resolveCustomEditor(
     document: MeshDocument,
     webviewPanel: vscode.WebviewPanel,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<void> {
     // add the webview to our internal set of active webviews
     this.webviews.add(document.uri, webviewPanel);
@@ -65,18 +71,13 @@ export class MeshViewProvider
     webviewPanel.webview.options = {
       enableScripts: true,
     };
-    webviewPanel.webview.html = this.getHtmlForWebview(
-      webviewPanel.webview,
-      document
-    );
+    webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, document);
 
-    webviewPanel.webview.onDidReceiveMessage((e) =>
-      this.onMessage(document, e)
-    );
+    webviewPanel.webview.onDidReceiveMessage((e) => this.onMessage(document, e));
 
     if (
-      document.uri.scheme == "file" &&
-      vscode.workspace.getConfiguration("3dpreview").get("hotReload", true)
+      document.uri.scheme == 'file' &&
+      vscode.workspace.getConfiguration('3dpreview').get('hotReload', true)
     ) {
       const watcher = vscode.workspace.createFileSystemWatcher(
         document.uri.fsPath,
@@ -85,73 +86,63 @@ export class MeshViewProvider
         true
       );
 
-      watcher.onDidChange(() =>
-        webviewPanel.webview.postMessage("modelRefresh")
-      );
+      watcher.onDidChange(() => this.postMessage(webviewPanel, { type: 'modelRefresh' }));
       webviewPanel.onDidDispose(() => watcher.dispose());
     }
 
     webviewPanel.webview.onDidReceiveMessage((e) => {
-      if (e.type === "ready") {
-        this.postMessage(webviewPanel, "init", {});
+      if (e.type === 'ready') {
+        this.postMessage(webviewPanel, { type: 'init' });
       }
     });
   }
 
-  private getMediaWebviewUri(
-    webview: vscode.Webview,
-    filePath: string
-  ): vscode.Uri {
+  private getMediaWebviewUri(webview: vscode.Webview, filePath: string): vscode.Uri {
     return webview.asWebviewUri(
-      vscode.Uri.file(path.join(this._context.extensionPath, "media", filePath))
+      vscode.Uri.file(path.join(this._context.extensionPath, 'media', filePath))
     );
   }
 
   private getSettings(uri: vscode.Uri): string {
-    const config = vscode.workspace.getConfiguration("3dpreview");
+    const config = vscode.workspace.getConfiguration('3dpreview');
     const initialData = {
       fileToLoad: uri.toString(),
-      hideControlsOnStart: config.get("hideControlsOnStart", false),
-      backgroundColor: config.get("backgroundColor", "#0b1447"),
-      pointMaxSize: config.get("pointMaxSize", 1.0),
-      pointSize: config.get("pointSize", 0.01),
-      showPoints: config.get("showPoints", false),
-      pointSizeAttenuation: config.get("pointSizeAttenuation", true),
-      showWireframe: config.get("showWireframe", false),
-      wireframeWidth: config.get("wireframeWidth", 0.01),
-      showMesh: config.get("showMesh", true),
-      showGridHelper: config.get("showGridHelper", true),
-      showAxesHelper: config.get("showAxesHelper", true),
-      pointColor: config.get("pointColor", "#cc0000"),
-      wireframeColor: config.get("wireframeColor", "#0000ff"),
-      fogDensity: config.get("fogDensity", 0.01),
-      lightIntensity: config.get("lightIntensity", 1.0),
-      cameraControls: config.get("cameraControls", "trackball"),
+      hideControlsOnStart: config.get('hideControlsOnStart', false),
+      backgroundColor: config.get('backgroundColor', '#0b1447'),
+      pointMaxSize: config.get('pointMaxSize', 1.0),
+      pointSize: config.get('pointSize', 0.01),
+      showPoints: config.get('showPoints', false),
+      pointSizeAttenuation: config.get('pointSizeAttenuation', true),
+      showWireframe: config.get('showWireframe', false),
+      wireframeWidth: config.get('wireframeWidth', 0.01),
+      showMesh: config.get('showMesh', true),
+      showGridHelper: config.get('showGridHelper', true),
+      showAxesHelper: config.get('showAxesHelper', true),
+      pointColor: config.get('pointColor', '#cc0000'),
+      wireframeColor: config.get('wireframeColor', '#0000ff'),
+      fogDensity: config.get('fogDensity', 0.01),
+      lightIntensity: config.get('lightIntensity', 1.0),
+      cameraControls: config.get('cameraControls', 'trackball'),
     };
-    return `<meta id="vscode-3dviewer-data" data-settings="${JSON.stringify(
-      initialData
-    ).replace(/"/g, "&quot;")}">`;
+    return `<meta id="vscode-3dviewer-data" data-settings="${JSON.stringify(initialData).replace(
+      /"/g,
+      '&quot;'
+    )}">`;
   }
 
   /**
    * get the static HTML used in our webviews.
    */
-  private getHtmlForWebview(
-    webview: vscode.Webview,
-    document: MeshDocument
-  ): string {
+  private getHtmlForWebview(webview: vscode.Webview, document: MeshDocument): string {
     const fileToLoad =
-      document.uri.scheme === "file"
+      document.uri.scheme === 'file'
         ? webview.asWebviewUri(vscode.Uri.file(document.uri.fsPath))
         : document.uri;
 
-    const scriptUri = this.getMediaWebviewUri(webview, "viewer.js");
-    const threeUri = this.getMediaWebviewUri(
-      webview,
-      "three/three.module.min.js"
-    );
-    const styleUri = this.getMediaWebviewUri(webview, "viewer.css");
-    const mediaUri = this.getMediaWebviewUri(webview, "");
+    const scriptUri = this.getMediaWebviewUri(webview, 'viewer.js');
+    const threeUri = this.getMediaWebviewUri(webview, 'three/three.module.min.js');
+    const styleUri = this.getMediaWebviewUri(webview, 'viewer.css');
+    const mediaUri = this.getMediaWebviewUri(webview, '');
     const nonce = getNonce();
 
     // prettier-ignore
@@ -182,22 +173,19 @@ export class MeshViewProvider
       </html>`;
   }
 
-  private readonly _callbacks = new Map<number, (response: any) => void>();
+  private readonly _callbacks = new Map<number, (response: unknown) => void>();
 
-  private postMessage(
-    panel: vscode.WebviewPanel,
-    type: string,
-    body: any
-  ): void {
-    panel.webview.postMessage({ type, body });
+  private postMessage(panel: vscode.WebviewPanel, message: ToWebviewMessage): void {
+    panel.webview.postMessage(message);
   }
 
-  private onMessage(document: MeshDocument, message: any) {
+  private onMessage(document: MeshDocument, message: FromWebviewMessage): void {
     switch (message.type) {
-      case "response":
+      case 'response': {
         const callback = this._callbacks.get(message.requestId);
         callback?.(message.body);
         return;
+      }
     }
   }
 }
