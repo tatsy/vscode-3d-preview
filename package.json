@@ -3,7 +3,7 @@
   "publisher": "tatsy",
   "displayName": "vscode-3d-preview",
   "description": "VS Code 3D Preview",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "icon": "logo.png",
   "homepage": "https://github.com/tatsy/vscode-3d-preview",
   "repository": {
@@ -115,6 +115,11 @@
           "default": 0.5,
           "description": "Default point size."
         },
+        "3dpreview.pointSizeAttenuation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Shrink points with distance from the camera. Disable to keep every point visible at a fixed on-screen size."
+        },
         "3dpreview.wireframeColor": {
           "type": "string",
           "default": "#0000ff",
@@ -125,10 +130,34 @@
           "default": 0.5,
           "description": "Default wireframe width."
         },
+        "3dpreview.flatShading": {
+          "type": "boolean",
+          "default": false,
+          "description": "Flat shading for mesh triangles."
+        },
         "3dpreview.fogDensity": {
           "type": "number",
           "default": 0,
           "description": "Fog density."
+        },
+        "3dpreview.lightIntensity": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "description": "Intensity of the directional light that follows the camera. Set 0 to disable it."
+        },
+        "3dpreview.cameraControls": {
+          "type": "string",
+          "default": "trackball",
+          "enum": [
+            "trackball",
+            "orbit"
+          ],
+          "enumDescriptions": [
+            "Free rotation in any direction (TrackballControls).",
+            "Rotation keeps the camera upright and cannot pass over the poles (OrbitControls)."
+          ],
+          "description": "Camera control scheme used in the viewer."
         }
       }
     }
@@ -138,7 +167,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint src",
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
@@ -150,8 +179,8 @@
     "@typescript-eslint/parser": "^8.20.0",
     "eslint": "^9.18.0",
     "glob": "^11.0.1",
+    "globals": "^17.12.0",
     "mocha": "^11.0.1",
-    "tslint": "^6.1.3",
     "typescript": "^5.7.3",
     "vsce": "^2.15.0",
     "vscode-test": "^1.6.1"

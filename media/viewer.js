@@ -1,12 +1,17 @@
 import * as THREE from 'three';
 import { GUI } from './three/libs/lil-gui.module.min.js';
 import { OrbitControls } from './three/controls/OrbitControls.js';
+import { TrackballControls } from './three/controls/TrackballControls.js';
 import { LineMaterial } from './three/lines/LineMaterial.js';
 import { Line2 } from './three/lines/Line2.js';
 import { WireframeGeometry2 } from './three/lines/WireframeGeometry2.js';
 import Stats from './three/libs/stats.module.js';
 import * as BufferGeometryUtils from './three/utils/BufferGeometryUtils.js';
 import * as utils from './utils.js';
+
+// Largest on-screen point size (in pixels) when size attenuation is disabled.
+// The point size slider is mapped onto [0, MAX_POINT_PIXEL_SIZE] in that mode.
+const MAX_POINT_PIXEL_SIZE = 30;
 
 class Viewer {
   controls;
@@ -60,6 +65,15 @@ class Viewer {
       0.1,
       5000.0
     );
+
+    // Key light attached to the camera, so that it follows the view direction and
+    // vertical surfaces stay shaded no matter how the model is rotated.
+    // Position is camera-local: slightly above and to the right of the viewpoint.
+    this.cameraLight = new THREE.DirectionalLight(0xffffff, this.params.lightIntensity);
+    this.cameraLight.position.set(0.5, 1.0, 1.0);
+    this.camera.add(this.cameraLight);
+    this.camera.add(this.cameraLight.target); // target at the camera origin
+    this.scene.add(this.camera);
 
     // check extension
     this.setMesh(this.params.fileToLoad);
@@ -130,11 +144,25 @@ class Viewer {
     this.scene.fog = new THREE.FogExp2(this.params.backgroundColor, this.params.fogDensity);
     this.scene.background = new THREE.Color(this.params.backgroundColor);
 
+    // Light
+    this.cameraLight.intensity = this.params.lightIntensity;
+
     // Points
-    if (this.params.showPoints) {
+    if (this.points.material.sizeAttenuation !== this.params.pointSizeAttenuation) {
+      // sizeAttenuation is a shader define, so the material must be recompiled.
+      this.points.material.sizeAttenuation = this.params.pointSizeAttenuation;
+      this.points.material.needsUpdate = true;
+    }
+
+    if (!this.params.showPoints) {
+      this.points.material.size = 0;
+    } else if (this.params.pointSizeAttenuation) {
+      // World-space size: points shrink with distance.
       this.points.material.size = this.params.pointSize;
     } else {
-      this.points.material.size = 0;
+      // Screen-space size: points stay visible at any distance.
+      this.points.material.size =
+        (this.params.pointSize / this.params.pointMaxSize) * MAX_POINT_PIXEL_SIZE;
     }
 
     if (this.monochrome) {
@@ -142,18 +170,28 @@ class Viewer {
     }
 
     // Mesh
-    this.scene.remove(this.mesh);
-    if (this.params.showMesh) {
-      this.scene.add(this.mesh);
+    if (this.mesh) {
+      if (this.mesh.material.flatShading !== this.params.flatShading) {
+        // flatShading is a shader define, so the material must be recompiled.
+        this.mesh.material.flatShading = this.params.flatShading;
+        this.mesh.material.needsUpdate = true;
+      }
+
+      this.scene.remove(this.mesh);
+      if (this.params.showMesh) {
+        this.scene.add(this.mesh);
+      }
     }
 
     // Wireframe
-    this.wireframe.material.color = new THREE.Color(this.params.wireframeColor);
-    this.wireframe.material.linewidth = this.params.wireframeWidth;
+    if (this.wireframe) {
+      this.wireframe.material.color = new THREE.Color(this.params.wireframeColor);
+      this.wireframe.material.linewidth = this.params.wireframeWidth;
 
-    this.scene.remove(this.wireframe);
-    if (this.params.showWireframe) {
-      this.scene.add(this.wireframe);
+      this.scene.remove(this.wireframe);
+      if (this.params.showWireframe) {
+        this.scene.add(this.wireframe);
+      }
     }
   }
 
@@ -161,6 +199,34 @@ class Viewer {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    if (this.controls && typeof this.controls.handleResize === 'function') {
+      this.controls.handleResize();
+    }
+  }
+
+  setupControls() {
+    const target =
+      this.controls !== undefined
+        ? this.controls.target.clone()
+        : utils.getBBoxCenter(this.points.geometry);
+
+    if (this.controls !== undefined) {
+      this.controls.dispose();
+    }
+
+    if (this.params.cameraControls === 'orbit') {
+      // OrbitControls keeps the camera upright and clamps the polar angle,
+      // so the model cannot be rotated over the poles.
+      this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    } else {
+      // TrackballControls allows free rotation in any direction.
+      this.controls = new TrackballControls(this.camera, this.renderer.domElement);
+      this.controls.rotateSpeed = 2.0;
+      this.controls.zoomSpeed = 1.2;
+      this.controls.panSpeed = 0.8;
+    }
+    this.controls.target.copy(target);
+    this.controls.update();
   }
 
   setMesh(fileToLoad) {
@@ -182,9 +248,18 @@ class Viewer {
         // merge geometries
         console.log('The object is with type of "THREE.Group"');
         geometry = BufferGeometryUtils.mergeGeometries(
-          object.children.map((child) => child.geometry.clone().applyMatrix4(child.matrix))
+          object.children.map((child) => {
+            const g = child.geometry.clone().applyMatrix4(child.matrix);
+            g.deleteAttribute('normal');
+            g.deleteAttribute('uv');
+            return g;
+          })
         );
-        computeIndices = !object.children[0].isPoints;
+
+        if (!object.children[0].isPoints) {
+          const tolerance = utils.getBBoxMaxExtent(geometry) * 1e-6;
+          geometry = BufferGeometryUtils.mergeVertices(geometry, tolerance);
+        }
       } else {
         // expect object is THREE.Mesh
         console.log('The object is with type of "THREE.Mesh" or "THREE.Points"');
@@ -238,8 +313,8 @@ class Viewer {
         // Mesh
         var material = new THREE.MeshStandardMaterial({
           color: 0xefefef,
-          roughness: 0.1,
-          flatShading: true,
+          roughness: 0.25,
+          flatShading: self.params.flatShading,
           side: THREE.DoubleSide,
         });
         self.mesh = new THREE.Mesh(geometry, material);
@@ -271,9 +346,9 @@ class Viewer {
     const camPos = utils.autoCameraPos(this.points.geometry);
 
     this.camera.position.copy(camPos);
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.target = camTarget;
-    this.controls.update();
+    this.camera.lookAt(camTarget);
+    this.setupControls();
+    window.addEventListener('resize', () => this.onWindowResize());
 
     // GUI setup
     const extent = utils.getBBoxMaxExtent(this.points.geometry);
@@ -299,6 +374,10 @@ class Viewer {
       .name('Point color')
       .onChange(() => this.updateRender());
     this.gui
+      .add(this.params, 'pointSizeAttenuation')
+      .name('Point size attenuation')
+      .onChange(() => this.updateRender());
+    this.gui
       .add(this.params, 'showWireframe')
       .name('Wireframe')
       .onChange(() => this.updateRender());
@@ -317,6 +396,10 @@ class Viewer {
       .name('Mesh')
       .onChange(() => this.updateRender());
     this.gui
+      .add(this.params, 'flatShading')
+      .name('Flat shading')
+      .onChange(() => this.updateRender());
+    this.gui
       .addColor(this.params, 'backgroundColor')
       .name('Background color')
       .onChange(() => this.updateRender());
@@ -326,6 +409,16 @@ class Viewer {
       .max(1)
       .name('Fog')
       .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, 'lightIntensity')
+      .min(0)
+      .max(5)
+      .name('Light intensity')
+      .onChange(() => this.updateRender());
+    this.gui
+      .add(this.params, 'cameraControls', { Trackball: 'trackball', Orbit: 'orbit' })
+      .name('Camera controls')
+      .onChange(() => this.setupControls());
 
     let folder = this.gui.addFolder('Grid Helper');
     folder.open();
