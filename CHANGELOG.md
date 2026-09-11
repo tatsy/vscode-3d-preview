@@ -9,6 +9,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Restore free rotation with `TrackballControls` and add the `3dpreview.cameraControls` setting to switch between trackball and orbit controls ([#12](https://github.com/tatsy/vscode-3d-preview/issues/12)).
 - Add the `3dpreview.pointSizeAttenuation` setting and GUI toggle to keep points at a fixed on-screen size ([#4](https://github.com/tatsy/vscode-3d-preview/issues/4)).
 - Add a directional light that follows the camera, with the `3dpreview.lightIntensity` setting and GUI slider ([#13](https://github.com/tatsy/vscode-3d-preview/issues/13)).
+- Support smooth shading. Meshes are now smooth-shaded by default; the `3dpreview.flatShading` setting and GUI toggle restore the previous flat look. OBJ meshes have their duplicated vertices welded so that smooth normals can be computed (STL files stay flat because the format carries no connectivity).
+- Register the window resize handler so the canvas follows the editor size.
+- Migrate linting to ESLint 9 flat config (`eslint.config.mjs`) and drop the unused `tslint` dependency.
 
 ## v0.2.2
 
