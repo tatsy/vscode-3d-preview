@@ -43,6 +43,7 @@ All settings live under the `3dpreview` namespace and act as the initial values 
 | Setting | Default | Description |
 |:--|:--|:--|
 | `hideControlsOnStart` | `false` | Fold the control panel when the viewer opens. |
+| `upAxis` | `"+Y"` | Axis of the file's coordinate system that points up in the viewer. Choose `"+Z"` for Z-up data such as Blender exports and `"-Y"` for OpenCV/COLMAP conventions. The axes helper shows the file's own axes; the grid stays on the world floor. |
 | `cameraControls` | `"trackball"` | `"trackball"` allows free rotation in any direction. `"orbit"` keeps the camera upright and cannot pass over the poles. |
 | `showMesh` | `true` | Show mesh triangles. |
 | `flatShading` | `false` | Use flat shading instead of smooth shading for meshes. STL files are always rendered flat because the format stores no shared vertices. |

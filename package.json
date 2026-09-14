@@ -146,6 +146,19 @@
           "minimum": 0,
           "description": "Intensity of the directional light that follows the camera. Set 0 to disable it."
         },
+        "3dpreview.upAxis": {
+          "type": "string",
+          "default": "+Y",
+          "enum": [
+            "+X",
+            "-X",
+            "+Y",
+            "-Y",
+            "+Z",
+            "-Z"
+          ],
+          "description": "Axis of the file's coordinate system that points up in the viewer. Use \"+Z\" for Z-up data such as Blender exports and \"-Y\" for OpenCV/COLMAP conventions."
+        },
         "3dpreview.cameraControls": {
           "type": "string",
           "default": "trackball",

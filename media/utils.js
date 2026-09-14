@@ -57,38 +57,38 @@ function createModelLoader(fileToLoad) {
   }
 }
 
-function getBBoxCenter(geometry) {
-  geometry.computeBoundingBox();
-
-  var center = new THREE.Vector3();
-  center.x = (geometry.boundingBox.max.x + geometry.boundingBox.min.x) / 2;
-  center.y = (geometry.boundingBox.max.y + geometry.boundingBox.min.y) / 2;
-  center.z = (geometry.boundingBox.max.z + geometry.boundingBox.min.z) / 2;
-  return center;
+// Accept either a THREE.Box3 or a geometry whose bounding box is (re)computed.
+function toBox3(geometryOrBox) {
+  if (geometryOrBox.isBox3) {
+    return geometryOrBox;
+  }
+  geometryOrBox.computeBoundingBox();
+  return geometryOrBox.boundingBox;
 }
 
-function getBBoxMaxExtent(geometry) {
-  geometry.computeBoundingBox();
-
-  var cx = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
-  var cy = geometry.boundingBox.max.y - geometry.boundingBox.min.y;
-  var cz = geometry.boundingBox.max.z - geometry.boundingBox.min.z;
-
-  return Math.max(cx, Math.max(cy, cz));
+function getBBoxCenter(geometryOrBox) {
+  const box = toBox3(geometryOrBox);
+  return box.getCenter(new THREE.Vector3());
 }
 
-function autoCameraPos(geometry) {
-  geometry.computeBoundingBox();
+function getBBoxMaxExtent(geometryOrBox) {
+  const box = toBox3(geometryOrBox);
+  const size = box.getSize(new THREE.Vector3());
+  return Math.max(size.x, Math.max(size.y, size.z));
+}
 
-  var cx = (geometry.boundingBox.max.x - geometry.boundingBox.min.x) / 2;
-  var cy = (geometry.boundingBox.max.y - geometry.boundingBox.min.y) / 2;
-  var cz = (geometry.boundingBox.max.z - geometry.boundingBox.min.z) / 2;
+function autoCameraPos(geometryOrBox) {
+  const box = toBox3(geometryOrBox);
+
+  var cx = (box.max.x - box.min.x) / 2;
+  var cy = (box.max.y - box.min.y) / 2;
+  var cz = (box.max.z - box.min.z) / 2;
   var sx = cx > 0 ? 1.0 : -1.0;
   var sy = cy > 0 ? 1.0 : -1.0;
   var sz = cz > 0 ? 1.0 : -1.0;
   var d = Math.max(cx, Math.max(cy, cz)) * 2.0;
 
-  var center = getBBoxCenter(geometry);
+  var center = getBBoxCenter(box);
   var cameraPos = new THREE.Vector3(d * sx, d * sy, d * sz);
   cameraPos.add(center);
   cameraPos.multiplyScalar(1);
