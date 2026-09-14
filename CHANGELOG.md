@@ -4,7 +4,7 @@ All notable changes to the "vscode-3dpreview" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## Unreleased
+## v0.2.6
 
 - Add the `3dpreview.upAxis` setting and GUI dropdown to choose which axis of the file points up (+X, -X, +Y, -Y, +Z, -Z). The model is rotated in place, the axes helper follows the file's coordinate system and the grid stays on the world floor ([#14](https://github.com/tatsy/vscode-3d-preview/issues/14)).
 
